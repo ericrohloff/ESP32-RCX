@@ -1,0 +1,7 @@
+{
+    "packages": [],
+    "files": {
+        "main.py": "./main.py",
+        "esp32_driver.py": "./esp32_driver.py"
+    }
+}

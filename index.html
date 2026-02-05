@@ -1,30 +1,58 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>RoboLab Web</title>
-
-        <!-- Recommended meta tags -->
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-
-        <!-- PyScript CSS -->
+        <title>ESP32-RCX Programmer</title>
+        <link rel="stylesheet" href="styles.css" />
         <link
             rel="stylesheet"
-            href="https://pyscript.net/releases/2026.2.1/core.css"
+            href="https://pyscript.net/releases/2024.1.1/core.css"
         />
-
-        <!-- This script tag bootstraps PyScript -->
         <script
             type="module"
-            src="https://pyscript.net/releases/2026.2.1/core.js"
+            src="https://pyscript.net/releases/2024.1.1/core.js"
         ></script>
     </head>
     <body>
-        <script
-            type="py"
-            src="./main.py"
-            config="./pyscript.toml"
-            terminal
-        ></script>
+        <div class="header">
+            <div>
+                <h1 style="margin: 0">RCX Python Programmer</h1>
+                <div id="status-bar">Status: Disconnected</div>
+            </div>
+            <button
+                id="connect-btn"
+                class="btn-connect"
+                py-click="connect_serial"
+            >
+                Connect ESP32
+            </button>
+        </div>
+
+        <div class="container">
+            <div class="editor-section">
+                <h3 style="margin-top: 0; color: #3498db">
+                    ESP32 Standalone Script
+                </h3>
+                <textarea id="code-editor" spellcheck="false">
+# Write your ESP32 standalone logic here
+while True:
+    rcx.beep()
+    time.sleep(2)
+            </textarea
+                >
+                <button id="flash-btn" class="btn-flash" py-click="flash_code">
+                    Flash to ESP32
+                </button>
+            </div>
+
+            <div class="control-panel">
+                <h3 style="margin-top: 0">Live Diagnostics</h3>
+                <button class="btn-test" py-click="live_ping">Ping RCX</button>
+                <button class="btn-test" py-click="live_beep">Play Beep</button>
+                <div id="console-log">Ready...</div>
+            </div>
+        </div>
+
+        <script type="py" src="main.py" config="pyscript.json"></script>
     </body>
 </html>
