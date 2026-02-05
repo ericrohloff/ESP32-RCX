@@ -1,0 +1,5 @@
+Notes for this project
+
+GitHub with commands in JavaScript: https://github.com/maehw/WebPBrick/blob/main/en/src/fileFormats/KaitaiStream.js 
+
+LASM Opcodes: https://www.mralligator.com/rcx/opcodes.html#stop_all_tasks 
