@@ -16,34 +16,67 @@ def log_to_ui(message):
     log_div.scrollTop = log_div.scrollHeight
 
 
-def encode_rcx_packet(opcode, params=[]):
+def visualize_packet(packet_list):
     """
-    Implements the RCX Serial Protocol:
-    Preamble + Opcode/Comp + Params/Comp + Checksum/Comp
+    packet_list: A list of integers representing the packet
+    Renders HTML spans with classes for the visualizer
     """
-    global toggle_bit
+    stream_div = document.querySelector("#packet-stream")
+    container = document.createElement("div")
+    container.style.marginBottom = "8px"
 
-    # Apply toggle bit (bit 3 / 0x08) to differentiate repeated commands
+    # helper to create byte span
+    def create_span(val, category, is_comp=False):
+        span = document.createElement("span")
+        span.classList.add("packet-byte")
+        span.classList.add(category)
+        if is_comp:
+            span.classList.add("byte-comp")
+        span.innerText = f"{val:02X}"
+        return span
+
+    # Preamble: 0, 1, 2
+    for i in range(3):
+        container.appendChild(create_span(packet_list[i], "byte-preamble"))
+
+    # Opcode and Complement: 3, 4
+    container.appendChild(create_span(packet_list[3], "byte-opcode"))
+    container.appendChild(create_span(packet_list[4], "byte-opcode", True))
+
+    # Parameters and Complements: variable length
+    # Checksum is always the last two bytes
+    param_end = len(packet_list) - 2
+    for i in range(5, param_end):
+        container.appendChild(create_span(
+            packet_list[i], "byte-param", i % 2 == 0))
+
+    # Checksum and Complement: last two
+    container.appendChild(create_span(packet_list[-2], "byte-checksum"))
+    container.appendChild(create_span(packet_list[-1], "byte-checksum", True))
+
+    # Add to stream and scroll to bottom
+    stream_div.appendChild(container)
+    stream_div.scrollTop = stream_div.scrollHeight
+
+
+def encode_rcx_packet(opcode, params=[]):
+    global toggle_bit
     tx_opcode = opcode | 0x08 if toggle_bit else opcode
     toggle_bit = not toggle_bit
 
-    # 1. Start with Preamble
     packet = [0x55, 0xFF, 0x00]
+    packet.extend([tx_opcode, tx_opcode ^ 0xFF])
 
-    # 2. Add Opcode and its Complement
-    packet.append(tx_opcode)
-    packet.append(tx_opcode ^ 0xFF)
-
-    # 3. Add Parameters and their Complements
     checksum = tx_opcode
     for p in params:
-        packet.append(p)
-        packet.append(p ^ 0xFF)
+        packet.extend([p, p ^ 0xFF])
         checksum = (checksum + p) % 256
 
-    # 4. Add Checksum and its Complement
-    packet.append(checksum)
-    packet.append(checksum ^ 0xFF)
+    packet.extend([checksum, checksum ^ 0xFF])
+
+    # --- NEW: Update the UI ---
+    visualize_packet(packet)
+    # --------------------------
 
     return Uint8Array.new(packet)
 
@@ -123,3 +156,23 @@ async def flash_code(event):
     full_script = driver_code + "\n\n# --- User Logic ---\n" + user_logic
 
     log_to_ui("Flashing full standalone script...")
+
+
+@when("click", "button[py-click='clear_visualizer']")
+def clear_visualizer(event):
+    document.querySelector("#packet-stream").innerHTML = ""
+    log_to_ui("Packet visualizer cleared.")
+
+
+@when("click", "button[py-click='clear_console']")
+def clear_console(event):
+    document.querySelector("#console-log").innerHTML = ""
+    # We don't log "cleared" here because it would immediately fill it back up!
+
+
+@when("click", "#clear-console-btn")
+def clear_console(event):
+    # Simply empty the container
+    document.querySelector("#console-log").innerHTML = ""
+    # Optional: Log a fresh start message
+    log_to_ui("Console cleared.")
