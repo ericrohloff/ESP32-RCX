@@ -12,13 +12,16 @@
             type="module"
             src="https://pyscript.net/releases/2024.1.1/core.js"
         ></script>
-    </head>
-    <body>
-        <div class="header">
-            <div>
-                <h1 style="margin: 0">RCX Python Programmer</h1>
-                <div id="status-bar">Status: Disconnected</div>
-            </div>
+               <div style="display:flex;gap:8px;align-items:center;">
+                  <a href="commands.html" class="btn-clear" target="_blank">Commands</a>
+                   <button
+                       id="connect-btn"
+                       class="btn-connect"
+                       py-click="connect_serial"
+                   >
+                       Connect ESP32
+                   </button>
+               </div>
             <button
                 id="connect-btn"
                 class="btn-connect"
@@ -69,15 +72,16 @@ while True:
                     <div class="legend">
                         <span><b style="color: #2980b9">■</b> Preamble</span>
                         <span><b style="color: #27ae60">■</b> OpCode</span>
-                        <span><b style="color: #8e44ad">■</b> Param</span>
-                        <span><b style="color: #c0392b">■</b> Checksum</span>
-                        <span><i>(Italic)</i> Complement</span>
-                    </div>
-                </div>
-                <button
-                    id="clear-console-btn"
-                    class="btn-clear"
-                    py-click="clear_console"
+            <script>
+                // small toggle for the commands docs panel
+                document.addEventListener('DOMContentLoaded', function(){
+                    const btn = document.getElementById('docs-btn');
+                    const panel = document.getElementById('command-docs');
+                    btn.addEventListener('click', function(){
+                        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                    });
+                });
+            </script>
                 >
                     Clear
                 </button>
