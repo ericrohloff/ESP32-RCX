@@ -1,122 +1,145 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <title>RCX Commands Reference</title>
-    <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-    <div class="header">
-        <div>
-            <h1 style="margin:0">RCX Commands Reference</h1>
-            <div id="status-bar">Reference only</div>
+    <head>
+        <meta charset="utf-8" />
+        <title>RCX Commands Reference</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div class="header">
+            <div>
+                <h1 style="margin: 0">RCX Commands Reference</h1>
+                <div id="status-bar">Reference only</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center">
+                <a href="index.html" class="btn-clear">App</a>
+            </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-            <a href="index.html" class="btn-clear">App</a>
-        </div>
-    </div>
 
-    <div class="container">
-        <div class="editor-section">
-delt
-tmrz 3
-            <h3 style="margin-top:0; color:#2ecc71">Python API (what students use)</h3>
-            <p>This page documents the Python wrapper functions provided by the
-            ESP32 standalone driver (the `rcx` object in <b>esp32_driver.py</b>).
-            High-school students can use these functions directly in their
-            MicroPython scripts. The low-level LASM-to-bytes conversion is
-            done internally and is intentionally hidden.</p>
+        <div class="container">
+            <div class="editor-section">
+                delt tmrz 3
+                <h3 style="margin-top: 0; color: #2ecc71">
+                    Python API (what students use)
+                </h3>
+                <p>
+                    This page documents the Python wrapper functions provided by
+                    the ESP32 standalone driver (the `rcx` object in
+                    <b>esp32_driver.py</b>). High-school students can use these
+                    functions directly in their MicroPython scripts. The
+                    low-level LASM-to-bytes conversion is done internally and is
+                    intentionally hidden.
+                </p>
 
-            <h4>Available functions on the `rcx` object</h4>
-            <ul>
-                <li><b>beep()</b>
-                    - Play a short beep using the IR transmitter.
-                    <pre>rcx.beep()</pre>
-                </li>
+                <h4>Available functions on the `rcx` object</h4>
+                <ul>
+                    <li>
+                        <b>beep()</b>
+                        - Play a short beep using the IR transmitter.
+                        <pre>rcx.beep()</pre>
+                    </li>
 
-                <li><b>motor_on(m)</b>
-                    - Turn motor number <i>m</i> on. Valid motors: 0, 1, 2.
-                    <pre>rcx.motor_on(0)  # turn motor 0 on</pre>
-                </li>
+                    <li>
+                        <b>motor_on(m)</b> - Turn motor number <i>m</i> on.
+                        Valid motors: 0, 1, 2.
+                        <pre>rcx.motor_on(0)  # turn motor 0 on</pre>
+                    </li>
 
-                <li><b>motor_off(m)</b>
-                    - Turn motor number <i>m</i> off.
-                    <pre>rcx.motor_off(0)  # turn motor 0 off</pre>
-                </li>
+                    <li>
+                        <b>motor_off(m)</b> - Turn motor number <i>m</i> off.
+                        <pre>rcx.motor_off(0)  # turn motor 0 off</pre>
+                    </li>
 
-                <li><b>stop_all_tasks()</b>
-                    - Send a "stop" command to the RCX to halt running tasks.
-                    <pre>rcx.stop_all_tasks()</pre>
-                </li>
+                    <li>
+                        <b>stop_all_tasks()</b>
+                        - Send a "stop" command to the RCX to halt running
+                        tasks.
+                        <pre>rcx.stop_all_tasks()</pre>
+                    </li>
 
-                <li><b>delete_task(tid)</b>
-                    - Delete a stored task definition from the interpreter's local store.
-                      (This does not directly map to hardware; it's for the script VM.)
-                    <pre>rcx.delete_task(0)</pre>
-                </li>
+                    <li>
+                        <b>delete_task(tid)</b>
+                        - Delete a stored task definition from the interpreter's
+                        local store. (This does not directly map to hardware;
+                        it's for the script VM.)
+                        <pre>rcx.delete_task(0)</pre>
+                    </li>
 
-                <li><b>set_log_level(n)</b>
-                    - Set the interpreter's local log level (for debugging only).
-                    <pre>rcx.set_log_level(1)</pre>
-                </li>
+                    <li>
+                        <b>set_log_level(n)</b>
+                        - Set the interpreter's local log level (for debugging
+                        only).
+                        <pre>rcx.set_log_level(1)</pre>
+                    </li>
 
-                <li><b>tmrz(n)</b>
-                    - Reset software timer number <i>n</i> to zero (internal VM timer).
-                    <pre>rcx.tmrz(2)</pre>
-                </li>
+                    <li>
+                        <b>tmrz(n)</b> - Reset software timer number <i>n</i> to
+                        zero (internal VM timer).
+                        <pre>rcx.tmrz(2)</pre>
+                    </li>
 
-                <li><b>wait(a, b)</b>
-                    - Pause execution. For compatibility with older scripts the
-                      driver treats the wait duration as <b>b * 0.1 seconds</b>.
-                    <pre>rcx.wait(2, 5)  # ~0.5 seconds</pre>
-                </li>
+                    <li>
+                        <b>wait(a, b)</b> - Pause execution. For compatibility
+                        with older scripts the driver treats the wait duration
+                        as <b>b * 0.1 seconds</b>.
+                        <pre>rcx.wait(2, 5)  # ~0.5 seconds</pre>
+                    </li>
 
-                <li><b>set_var(idx, val)</b>
-                    - Store a numeric value in the interpreter variable table.
-                      Use this to hold counters, parameters, or references.
-                    <pre>rcx.set_var(5, 42)</pre>
-                </li>
+                    <li>
+                        <b>set_var(idx, val)</b>
+                        - Store a numeric value in the interpreter variable
+                        table. Use this to hold counters, parameters, or
+                        references.
+                        <pre>rcx.set_var(5, 42)</pre>
+                    </li>
 
-                <li><b>mulv(dst, src, mul)</b>
-                    - Multiply variable <i>src</i> by <i>mul</i> and store the
-                      low 8 bits in <i>dst</i> (useful for simple arithmetic).
-                    <pre>rcx.mulv(10, 2, 20)</pre>
-                </li>
+                    <li>
+                        <b>mulv(dst, src, mul)</b> - Multiply variable
+                        <i>src</i> by <i>mul</i> and store the low 8 bits in
+                        <i>dst</i> (useful for simple arithmetic).
+                        <pre>rcx.mulv(10, 2, 20)</pre>
+                    </li>
 
-                <li><b>out_port(port, value)</b>
-                    - Drive outputs according to the bits of <i>value</i>.
-                      By default bit0→motor0, bit1→motor1, bit2→motor2.
-                    <pre>rcx.out_port(2, 5)  # set port 2 to value 5 (bits 0 and 2 set)</pre>
-                </li>
-            </ul>
+                    <li>
+                        <b>out_port(port, value)</b> - Drive outputs according
+                        to the bits of <i>value</i>. By default bit0→motor0,
+                        bit1→motor1, bit2→motor2.
+                        <pre>
+rcx.out_port(2, 5)  # set port 2 to value 5 (bits 0 and 2 set)</pre
+                        >
+                    </li>
+                </ul>
 
-            <h4>Useful VM state</h4>
-            <ul>
-                <li><b>rcx.vars</b> - dictionary of interpreter variables (read/write).</li>
-                <li><b>rcx.tasks</b> - stored task definitions created by the interpreter (if used).</li>
-            </ul>
+                <h4>Useful VM state</h4>
+                <ul>
+                    <li>
+                        <b>rcx.vars</b> - dictionary of interpreter variables
+                        (read/write).
+                    </li>
+                    <li>
+                        <b>rcx.tasks</b> - stored task definitions created by
+                        the interpreter (if used).
+                    </li>
+                </ul>
 
-            <h4>Quick example script</h4>
-            <pre>
+                <h4>Quick example script</h4>
+                <pre>
 # Example: simple motor pulse sequence
 rcx.motor_on(0)
 rcx.wait(0, 20)   # ~2.0 seconds using the default scaling
 rcx.motor_off(0)
 rcx.beep()
-            </pre>
-
-            <p style="color:#ccc; font-size:0.9em">Notes: This API is intentionally
-            simple for students. If you need additional helpers (for example
-            named motor aliases, different timing units, or stronger
-            LASM-compatibility), I can add those helper functions into
-            <b>esp32_driver.py</b> so student code stays clean and readable.</p>
-
+            </pre
+                >
+            </div>
+            <div class="control-panel">
+                <h3 style="margin-top: 0">Quick Actions</h3>
+                <p>
+                    Use the app to compose scripts and flash them to the ESP32.
+                    The interpreter will run the stored commands when executed
+                    on-device.
+                </p>
+            </div>
         </div>
-        <div class="control-panel">
-            <h3 style="margin-top:0">Quick Actions</h3>
-            <p>Use the app to compose scripts and flash them to the ESP32. The interpreter
-            will run the stored commands when executed on-device.</p>
-        </div>
-    </div>
-</body>
+    </body>
 </html>
