@@ -3,5 +3,10 @@
     "files": {
         "main.py": "./main.py",
         "esp32_driver.py": "./esp32_driver.py"
+    },
+    "js_modules": {
+        "main": {
+            "https://cdn.jsdelivr.net/npm/micro-repl@0.5.2/serial.js": "micro_repl"
+        }
     }
 }
