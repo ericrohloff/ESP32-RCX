@@ -1,6 +1,5 @@
 import asyncio
-import js
-from pyscript import when
+from pyscript import when, document, window
 from pyscript.js_modules.micro_repl import default as Board
 import json
 import main as core
@@ -32,9 +31,9 @@ async def connect_serial(event):
             serial_board.board = None
             serial_board.terminal = None
             serial_board.connected = False
-            js.document.querySelector(
+            document.querySelector(
                 "#status-bar").innerText = "Status: Disconnected"
-            js.document.querySelector("#status-bar").style.color = "#e74c3c"
+            document.querySelector("#status-bar").style.color = "#e74c3c"
             log_to_ui("Serial Port Closed")
             return
         except Exception as e:
@@ -57,9 +56,9 @@ async def connect_serial(event):
         if port_name:
             serial_board.terminal = serial_board.board.terminal
             serial_board.connected = True
-            js.document.querySelector(
+            document.querySelector(
                 "#status-bar").innerText = f"Status: Connected to {port_name} @ 115200"
-            js.document.querySelector("#status-bar").style.color = "#2ecc71"
+            document.querySelector("#status-bar").style.color = "#2ecc71"
             log_to_ui(f"Serial Port Opened: {port_name}")
         else:
             log_to_ui("Connection cancelled by user")
@@ -79,8 +78,8 @@ async def on_board_disconnect():
     serial_board.board = None
     serial_board.terminal = None
     serial_board.connected = False
-    js.document.querySelector("#status-bar").innerText = "Status: Disconnected"
-    js.document.querySelector("#status-bar").style.color = "#e74c3c"
+    document.querySelector("#status-bar").innerText = "Status: Disconnected"
+    document.querySelector("#status-bar").style.color = "#e74c3c"
     log_to_ui("Board disconnected")
 
 
@@ -133,11 +132,11 @@ async def list_board_files(event):
     log_to_ui("Fetching file list from ESP32...")
     try:
         files = await serial_board.board.eval(list_code, hidden=True)
-        js.window.console.log('board.eval returned:', files)
+        window.console.log('board.eval returned:', files)
         if files is None:
             log_to_ui('No file list returned from board (None)')
             return
-        selector = js.document.querySelector("#file-selector")
+        selector = document.querySelector("#file-selector")
         selector.innerHTML = '<option value="">-- Select a file --</option>'
         try:
             for f in files:
@@ -147,7 +146,7 @@ async def list_board_files(event):
                 option.text = f
                 selector.appendChild(option)
         except Exception as e:
-            js.window.console.error('Error iterating files:', e, files)
+            window.console.error('Error iterating files:', e, files)
             log_to_ui(f'Error: returned file list is not iterable: {e}')
             return
     except Exception as e:
@@ -159,7 +158,7 @@ async def load_file(event):
     if not serial_board.is_connected():
         log_to_ui("Error: Not connected to ESP32")
         return
-    selector = js.document.querySelector("#file-selector")
+    selector = document.querySelector("#file-selector")
     filename = selector.value
     if not filename:
         log_to_ui("Please select a file to load")
@@ -169,7 +168,7 @@ async def load_file(event):
         read_code = f"""with open('{filename}', 'r') as f:\n    content = f.read()\ncontent"""
         file_content = await serial_board.board.eval(read_code, hidden=True)
         if file_content:
-            js.document.querySelector("#code-editor").value = file_content
+            document.querySelector("#code-editor").value = file_content
             log_to_ui(f"✓ Loaded {filename} into editor")
         else:
             log_to_ui(f"File is empty or could not be read")
@@ -182,7 +181,7 @@ async def flash_code(event):
     if not serial_board.is_connected():
         log_to_ui("Connect ESP32 first!")
         return
-    user_logic = js.document.querySelector("#code-editor").value
+    user_logic = document.querySelector("#code-editor").value
     try:
         with open("esp32_driver.py", "r") as f:
             driver_code = f.read()

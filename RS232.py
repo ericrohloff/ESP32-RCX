@@ -1,6 +1,5 @@
 from pyscript.js_modules.micro_repl import default as Board
-from pyscript import window, document
-from pyscript import document, when, window
+from pyscript import document, window
 import json
 import asyncio
 
@@ -86,7 +85,7 @@ body {
 </style>
 '''
 
-RS232HTML = '''   
+RS232HTML = '''
 <h3 id='main_title{num}'>Serial Terminal Setup</h3>
     <div id='REPL{num}' class = 'parent'>
         <div id = 'left{num}' class = 'child'>
@@ -99,6 +98,8 @@ RS232HTML = '''
                 <button id="run{num}"      class = 'button'>run</button>
                 <button id="run_main{num}" class = 'button'>run as main.py</button>
                 <button id="upload{num}"   class = 'button'>upload code</button>
+                <button id="install_lib{num}" class = 'button'>Install RCX Lib</button>
+                <button id="download_main{num}" class = 'button'>download main.py</button>
                 <button id="reset{num}"    class = 'button'>reset board</button>
 
 
@@ -111,11 +112,11 @@ RS232HTML = '''
         <div id = 'right{num}' class = 'child'>
             <div id = 'right_btns{num}'    class = 'btndiv'>
                 <select name="list_files" id="list_files{num}"> </select>
-                <button id="download{num}" class = 'button'>Grab remote code</button> 
-                <button id="clear{num}"    class = 'button'>Clear</button> 
-                <button id="CtrlC{num}"    class = 'button'>CtrlC</button> 
-                <button id="delete{num}"   class = 'button'>Delete remote code</button> 
-                <button id="re_list{num}"  class = 'button'>Get List</button> 
+                <button id="download{num}" class = 'button'>Grab remote code</button>
+                <button id="clear{num}"    class = 'button'>Clear</button>
+                <button id="CtrlC{num}"    class = 'button'>CtrlC</button>
+                <button id="delete{num}"   class = 'button'>Delete remote code</button>
+                <button id="re_list{num}"  class = 'button'>Get List</button>
             </div>
             <div id="repl{num}" class = 'repl-box'></div>
         </div>
@@ -275,6 +276,8 @@ class CEEO_RS232():
         document.getElementById(
             f'upload{self.suffix}').onclick = self.on_upload
         document.getElementById(f'reset{self.suffix}').onclick = self.on_reset
+        document.getElementById(
+            f'download_main{self.suffix}').onclick = self.on_download_main
 
         document.getElementById(
             f'resizer{self.suffix}').onmousedown = self.on_resize
@@ -283,6 +286,9 @@ class CEEO_RS232():
         document.getElementById(
             f'REPL{self.suffix}').onmouseleave = self.stopbar
         document.getElementById(f'REPL{self.suffix}').onmouseup = self.stopbar
+
+        self.install_btn = document.getElementById(f'install_lib{self.suffix}')
+        self.install_btn.onclick = self.on_install_library
 
         self.python.code = default_code
         self.python.handleEvent = self.handle_board
@@ -365,6 +371,27 @@ class CEEO_RS232():
             await self.uboard.board.reset()
             self.uboard.focus()
 
+    async def on_download_main(self, event):
+        """Download main.py code from editor as a file."""
+        code = self.python.code
+        if not code:
+            window.alert("Editor is empty. Nothing to download.")
+            return
+
+        # Create a data URL and trigger download
+        try:
+            import base64
+            b64code = base64.b64encode(code.encode()).decode()
+            data_url = f"data:text/plain;base64,{b64code}"
+            link = document.createElement('a')
+            link.href = data_url
+            link.download = 'main.py'
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        except Exception as e:
+            window.alert(f"Download failed: {e}")
+
     async def on_upload(self, event):
         if self.uboard.connected:
             code = self.python.code
@@ -416,3 +443,206 @@ class CEEO_RS232():
             return False  # return False to avoid executing on browser
         else:
             return True
+
+    async def on_install_library(self, event):
+        if not self.uboard.connected:
+            window.alert("Please connect to the ESP32 first.")
+            return
+
+        # The driver code you want to save on the ESP32
+        driver_code = """import machine
+import time
+
+ir_pwm = machine.PWM(machine.Pin(17))
+ir_pwm.freq(38000)
+ir_pwm.duty_u16(32768)
+
+uart = machine.UART(1, baudrate=2400, tx=17)
+
+class StandaloneRCX:
+    def __init__(self):
+        self.toggle = False
+        # VM state for simple LASM-like scripts
+        self.vars = {}
+        self.timers = {}
+        self.tasks = {}
+
+    def _send(self, opcode, params=[]):
+        tx_opcode = opcode | 0x08 if self.toggle else opcode
+        self.toggle = not self.toggle
+
+        # Build Packet
+        packet = bytearray(
+            [0x55, 0xFF, 0x00, tx_opcode, tx_opcode ^ 0xFF])
+        checksum = tx_opcode
+        for p in params:
+                        packet.extend(bytearray([p, p ^ 0xFF]))
+                        checksum = (checksum + p) % 256
+        packet.extend(bytearray([checksum, checksum ^ 0xFF]))
+
+        uart.write(packet)
+        time.sleep(0.1)
+
+    def beep(self): self._send(0x51, [0x01])
+    def motor_on(self, m): self._send(0x21, [0x80 | (1 << m)])
+    def motor_off(self, m): self._send(0x21, [0x40 | (1 << m)])
+
+    # High-level helper commands (mapping common LASM directives)
+    def stop_all_tasks(self):
+        self._send(0x50)
+
+    def delete_task(self, tid):
+        try:
+            self.tasks.pop(int(tid), None)
+        except Exception:
+            pass
+
+    def set_log_level(self, level):
+        try:
+            self.vars['_logz'] = int(level)
+        except Exception:
+            self.vars['_logz'] = 0
+
+    def tmrz(self, tindex):
+        self.timers[int(tindex)] = 0
+
+    def wait(self, a, b):
+        try:
+            delay = float(b) * 0.1
+        except Exception:
+            delay = 0
+        time.sleep(delay)
+
+    def set_var(self, *args):
+
+        if len(args) >= 2:
+            try:
+                idx = int(args[0])
+                val = int(args[1])
+                self.vars[idx] = val
+            except Exception:
+                pass
+
+    def mulv(self, dst, src, mul):
+        try:
+            dst = int(dst); src = int(src); mul = int(mul)
+            sval = int(self.vars.get(src, 0))
+            self.vars[dst] = (sval * mul) & 0xFF
+        except Exception:
+            pass
+
+    def out_port(self, port, value):
+        try:
+            v = int(value)
+        except Exception:
+            v = 0
+        for m in range(3):
+            if v & (1 << m):
+                self.motor_on(m)
+            else:
+                self.motor_off(m)
+
+    def run_lasm_script(self, script_text):
+        lines = [l.strip() for l in script_text.splitlines()]
+        cur_task = None
+        for raw in lines:
+            if not raw:
+                continue
+            parts = [p.strip() for p in raw.replace(',', ' ').split()]
+            if not parts:
+                continue
+            cmd = parts[0].lower()
+            args = parts[1:]
+            if cmd == 'task':
+                # begin recording a task
+                try:
+                    cur_task = int(args[0]) if args else 0
+                    self.tasks[cur_task] = []
+                except Exception:
+                    cur_task = None
+                continue
+            if cmd == 'endt':
+                cur_task = None
+                continue
+
+            # If inside a task definition, store the raw line
+            if cur_task is not None:
+                self.tasks[cur_task].append(raw)
+                continue
+
+            # Top-level commands executed immediately
+            if cmd == 'stop':
+                self.stop_all_tasks()
+            elif cmd == 'delt':
+                self.delete_task(args[0] if args else 0)
+            elif cmd == 'logz':
+                self.set_log_level(args[0] if args else 0)
+            elif cmd == 'wait':
+                # wait A,B -> use B as duration units
+                if len(args) >= 2:
+                    self.wait(args[0], args[1])
+                elif len(args) == 1:
+                    self.wait(0, args[0])
+            elif cmd == 'tmrz':
+                if args:
+                    self.tmrz(args[0])
+            elif cmd == 'set':
+                # set idx, value  (we only use first pair)
+                if len(args) >= 2:
+                    self.set_var(args[0], args[1])
+            elif cmd == 'mulv':
+                if len(args) >= 3:
+                    self.mulv(args[0], args[1], args[2])
+            elif cmd == 'out':
+                if len(args) >= 2:
+                    self.out_port(args[0], args[1])
+            elif cmd == 'run':
+                # run a previously-defined task: `run N`
+                if args:
+                    tid = int(args[0])
+                    self._run_task(tid)
+                elif cmd == 'beep':
+                    self.beep()
+                        # Unknown commands are ignored for now
+
+    def _run_task(self, tid):
+        seq = self.tasks.get(int(tid), [])
+        for line in seq:
+            parts = [p.strip() for p in line.replace(',', ' ').split()]
+            if not parts:
+                continue
+            cmd = parts[0].lower()
+            args = parts[1:] 
+            if cmd == 'wait':
+                if len(args) >= 2:
+                    self.wait(args[0], args[1])
+                elif len(args) == 1:
+                    self.wait(0, args[0])
+            elif cmd == 'set':
+                if len(args) >= 2:
+                    self.set_var(args[0], args[1])
+            elif cmd == 'mulv':
+                if len(args) >= 3:
+                    self.mulv(args[0], args[1], args[2])
+            elif cmd == 'out':
+                if len(args) >= 2:
+                    self.out_port(args[0], args[1])
+            elif cmd == 'beep':
+                self.beep()
+            elif cmd == 'tmrz':
+                if args:
+                    self.tmrz(args[0])
+            # other commands treated as no-op in task context"""
+
+        self.install_btn.innerText = "Installing..."
+        try:
+            # Upload the file as 'rcx_driver.py'
+            success = await self.uboard.board.upload('rcx_driver.py', driver_code)
+            if success:
+                window.alert(
+                    "rcx_driver.py installed successfully! You can now 'import rcx_driver' in your scripts.")
+                await self.re_list(None)  # Refresh the file list
+        except Exception as e:
+            window.alert(f"Installation failed: {e}")
+        finally:
+            self.install_btn.innerText = "Install RCX Lib"

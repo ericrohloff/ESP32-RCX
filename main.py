@@ -1,8 +1,10 @@
 import asyncio
-from js import Uint8Array, document
+from pyscript import document, window
+from js import Uint8Array
 import json
 import RS232
 import control_panel
+from rcx_lib import RCX
 
 
 # Core utilities for packet creation and visualization.
@@ -12,14 +14,20 @@ myRS232 = RS232.CEEO_RS232(divName='all_things_rs232',
 
 
 def log_to_ui(message):
+    """Log message to the console-log div; fallback to console if not present."""
     log_div = document.querySelector("#console-log")
+    if not log_div:
+        window.console.log(message)
+        return
     new_entry = document.createElement("div")
     new_entry.style.borderBottom = "1px solid #222"
     new_entry.style.padding = "2px"
     new_entry.innerText = f"> {message}"
+    log_div.appendChild(new_entry)
 
 
 def visualize_packet(packet_list):
+    """Visualize an RCX packet as colored byte chips in the packet-stream div."""
     stream_div = document.querySelector("#packet-stream")
     if not stream_div:
         return
