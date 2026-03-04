@@ -6,38 +6,39 @@
         <link rel="stylesheet" href="styles.css" />
         <link
             rel="stylesheet"
-            href="https://pyscript.net/releases/2024.1.1/core.css"
+            href="https://pyscript.net/releases/2025.5.1/core.css"
         />
         <script
             type="module"
-            src="https://pyscript.net/releases/2024.1.1/core.js"
+            src="https://pyscript.net/releases/2025.5.1/core.js"
         ></script>
+        <script src="/mini-coi.js"></script>
     </head>
     <body>
-        <div style="display:flex;gap:8px;align-items:center;padding:10px;">
-            <a href="commands.html" class="btn-clear" target="_blank">Commands</a>
-            <button id="connect-btn" class="btn-connect">Connect ESP32</button>
-            <div id="status-bar" style="font-weight:bold;color:#e74c3c;">Status: Disconnected</div>
+        <script type="py" src="main.py" config="pyscript.toml"></script>
+        <script
+            type="py"
+            src="control_panel.py"
+            config="pyscript.toml"
+        ></script>
+        <div
+            style="display: flex; gap: 8px; align-items: center; padding: 10px"
+        >
+            <a href="commands.html" class="btn-clear" target="_blank"
+                >Commands</a
+            >
         </div>
 
         <div class="container">
-            <div class="editor-section">
-                <h3 style="margin-top: 0; color: #3498db">
-                    ESP32 Standalone Script
-                </h3>
-                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                    <button id="list-board-files-btn" class="btn-flash">📂 List Board Files</button>
-                    <select id="file-selector" style="padding: 5px; border-radius: 4px;">
-                        <option value="">-- Select a file --</option>
-                    </select>
-                    <button id="load-file-btn" class="btn-flash">↓ Load File</button>
-                    <button id="flash-btn" class="btn-flash">⬆ Flash to ESP32</button>
-                </div>
-                <textarea id="code-editor" spellcheck="false"># Write your ESP32 standalone logic here
-while True:
-    rcx.beep()
-    time.sleep(2)
-</textarea>
+            <div class="rs232-area">
+                <script
+                    type="mpy-editor"
+                    src="./main.py"
+                    config="./pyscript.toml"
+                    env="su25"
+                    setup
+                ></script>
+                <div id="all_things_rs232"></div>
             </div>
 
             <div class="control-panel">
@@ -66,23 +67,7 @@ while True:
                         <span><b style="color: #27ae60">■</b> OpCode</span>
                     </div>
                 </div>
-
-                <h4>Serial Terminal (micro-repl)</h4>
-                <div id="repl-terminal" style="
-                    background: #000;
-                    color: #0f0;
-                    height: 150px;
-                    overflow-y: auto;
-                    padding: 10px;
-                    border-radius: 4px;
-                    border: 1px solid #0f0;
-                    font-family: monospace;
-                    font-size: 12px;
-                "></div>
-                <div id="console-log">Ready...</div>
             </div>
         </div>
-
-        <script type="py" src="main.py" config="pyscript.json"></script>
     </body>
 </html>
