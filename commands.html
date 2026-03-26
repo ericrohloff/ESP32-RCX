@@ -6,22 +6,18 @@
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
-        <div class="header">
-            <div>
-                <h1 style="margin: 0">RCX Commands Reference</h1>
-                <div id="status-bar">Reference only</div>
+        <header class="app-header">
+            <div class="header-content">
+                <h1>RCX Commands Reference</h1>
+                <nav class="header-nav">
+                    <a href="index.html" class="header-link">← Back to App</a>
+                </nav>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center">
-                <a href="index.html" class="btn-clear">App</a>
-            </div>
-        </div>
+        </header>
 
         <div class="container">
             <div class="editor-section">
-                delt tmrz 3
-                <h3 style="margin-top: 0; color: #2ecc71">
-                    Python API (what students use)
-                </h3>
+                <h3>Python API</h3>
                 <p>
                     This page documents the Python wrapper functions provided by
                     the ESP32 standalone driver (the `rcx` object in
@@ -133,12 +129,25 @@ rcx.beep()
                 >
             </div>
             <div class="control-panel">
-                <h3 style="margin-top: 0">Quick Actions</h3>
-                <p>
+                <h3>Quick Actions</h3>
+                <p style="margin-top: 12px; color: #374151; font-size: 0.95rem">
                     Use the app to compose scripts and flash them to the ESP32.
                     The interpreter will run the stored commands when executed
                     on-device.
                 </p>
+                <a
+                    href="index.html"
+                    class="btn-connect"
+                    style="
+                        display: inline-block;
+                        text-align: center;
+                        text-decoration: none;
+                        margin-top: 12px;
+                        width: auto;
+                        padding: 10px 14px;
+                    "
+                    >Go to App</a
+                >
             </div>
         </div>
     </body>

@@ -27,7 +27,51 @@ body {
         Arial;
     background: var(--bg);
     color: #0f172a;
-    padding: 16px;
+    padding: 0;
+}
+
+/* App Header */
+.app-header {
+    background: linear-gradient(135deg, #658ee7 0%, #4497e0 100%);
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    max-width: 100%;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 28px;
+    color: white;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.header-nav {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.header-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.header-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Layout */
@@ -36,6 +80,8 @@ body {
     grid-template-columns: 1fr 320px;
     gap: 16px;
     align-items: start;
+    padding: 20px;
+    max-width: 1400px;
 }
 
 /* Panels */
@@ -168,4 +214,61 @@ textarea {
     padding: 8px;
     background: #fff;
     color: #0b1220;
+}
+
+/* Editor section styling for commands page */
+.editor-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    line-height: 1.6;
+}
+
+.editor-section h3 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+}
+
+.editor-section h3:first-child {
+    margin-top: 0;
+}
+
+.editor-section h4 {
+    margin-top: 18px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    color: var(--accent);
+}
+
+.editor-section p {
+    margin: 12px 0;
+    color: #374151;
+}
+
+.editor-section pre {
+    background: #f3f4f6;
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    border: 1px solid var(--border);
+    color: #0b1220;
+}
+
+.editor-section ul {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.editor-section li {
+    margin: 10px 0;
+    line-height: 1.5;
+    color: #1f2937;
+}
+
+.editor-section b {
+    color: var(--accent);
+    font-weight: 700;
 }
