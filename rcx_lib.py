@@ -401,10 +401,9 @@ class RCX:
 rcx = RCX()
 
 
-# Example usage for ESP32 tower implementation:
+# Example usage for ESP32 MicroPython:
 #
 # from rcx_lib import RCX
-# import serial
 #
 # rcx = RCX()
 # rcx.beep()
@@ -412,16 +411,13 @@ rcx = RCX()
 #
 # tx_bytes = rcx.get_bytecode()
 #
-# # ESP32 driver would handle serial communication:
-# ser = serial.Serial('/dev/ttyUSB0', 2400, timeout=0.34)
-# ser.write(tx_bytes)
+# # Transmit via IR (your ESP32 driver handles this)
+# transmit_to_rcx(tx_bytes)  # Call your ESP32 IR transmission function
 #
 # # Receive response (including echo)
-# response = ser.read(1024)  # Read enough bytes
+# response = receive_from_rcx(timeout=0.34)  # Call your ESP32 IR receive function
 #
 # # Validate and extract payload
-# success, payload = rcx.send_and_receive(tx_bytes, timeout=0.34)
-# # Or manually:
 # success, payload = rcx._process_response(response, tx_bytes)
 #
 # if success:
