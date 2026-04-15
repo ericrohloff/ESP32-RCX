@@ -117,6 +117,79 @@ async def on_stop(event):
     await send_to_esp32(pkt)
 
 
+# ── Templates ──────────────────────────────────────────────────────────────
+
+TEMPLATES = {
+    "beep_test": """\
+from rcx_driver import rcx
+
+# Quick beep — confirms IR is reaching the RCX
+rcx.beep()
+""",
+    "move_forward": """\
+from rcx_driver import rcx
+
+# Drive forward 2 seconds at full speed, then stop
+rcx.move(speed=7, duration=2.0)
+rcx.beep()
+""",
+    "drive_pattern": """\
+from rcx_driver import rcx
+
+# Forward -> pivot left -> forward
+rcx.move(speed=7, duration=2.0)
+rcx.turn_left(duration=0.6)
+rcx.move(speed=7, duration=2.0)
+rcx.stop()
+rcx.beep()
+""",
+    "motor_test": """\
+from rcx_driver import rcx
+
+# Test motors A and B individually
+rcx.set_power(0, 5)
+rcx.motor_on(0)
+rcx.wait(1.5)
+rcx.motor_off(0)
+
+rcx.set_power(1, 5)
+rcx.motor_on(1)
+rcx.wait(1.5)
+rcx.motor_off(1)
+
+rcx.beep()
+""",
+    "spin_turn": """\
+from rcx_driver import rcx
+
+# Spin left then right
+rcx.turn_left(speed=5, duration=1.0)
+rcx.turn_right(speed=5, duration=1.0)
+rcx.stop()
+rcx.beep()
+""",
+}
+
+
+@when("click", "#btn-load-template")
+def on_load_template(event):
+    sel = document.getElementById("template-select")
+    key = sel.value if sel else ""
+    if not key:
+        log_to_ui("Select a template first.")
+        return
+    code = TEMPLATES.get(key)
+    if not code:
+        log_to_ui(f"Unknown template: {key}")
+        return
+    editor = document.getElementById("mpCode1")
+    if editor:
+        editor.code = code
+        log_to_ui(f"Template loaded: {key}")
+    else:
+        log_to_ui("Editor not found.")
+
+
 # File listing / load / flash handlers (moved from main)
 list_code = """import os
 result = os.listdir('/')
@@ -183,10 +256,10 @@ async def flash_code(event):
         return
     user_logic = document.querySelector("#code-editor").value
     try:
-        with open("esp32_driver.py", "r") as f:
-            driver_code = f.read()
-    except Exception:
-        log_to_ui("Error: Could not find esp32_driver.py")
+        import esp32_driver
+        driver_code = esp32_driver.code
+    except Exception as e:
+        log_to_ui(f"Error: Could not import esp32_driver: {e}")
         return
     full_script = driver_code + "\n\n# --- User Logic ---\n" + user_logic
     log_to_ui("Flashing script to ESP32...")

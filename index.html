@@ -70,6 +70,45 @@
                         <span><b style="color: #27ae60">■</b> OpCode</span>
                     </div>
                 </div>
+
+                <div style="margin-top: 16px">
+                    <h4 style="margin: 0 0 8px 0; font-size: 0.95rem">
+                        Code Templates
+                    </h4>
+                    <select
+                        id="template-select"
+                        style="
+                            width: 100%;
+                            padding: 6px;
+                            border-radius: 5px;
+                            border: 1px solid var(--border);
+                            margin-bottom: 6px;
+                            background: white;
+                        "
+                    >
+                        <option value="">— choose template —</option>
+                        <option value="beep_test">Beep Test</option>
+                        <option value="move_forward">Move Forward (2 s)</option>
+                        <option value="drive_pattern">Drive Pattern</option>
+                        <option value="motor_test">Motor A / B Test</option>
+                        <option value="spin_turn">Spin Left &amp; Right</option>
+                    </select>
+                    <button
+                        id="btn-load-template"
+                        style="
+                            width: 100%;
+                            padding: 7px;
+                            background: var(--glass);
+                            border: 1px solid var(--border);
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            font-size: 12px;
+                        "
+                    >
+                        Load Template
+                    </button>
+                </div>
             </div>
         </div>
     </body>

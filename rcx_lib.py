@@ -2,8 +2,10 @@
 rcx_lib.py - Python wrapper for RCX/LASM commands
 
 This library provides a Pythonic interface to control a LEGO RCX brick
-via IR using LASM opcodes. It supports bidirectional communication with
-the RCX, sending commands and receiving responses.
+via IR using LASM opcodes. It supports full bidirectional communication,
+handling both command transmission and response reception.
+
+Runs directly on ESP32 MicroPython - includes UART setup and I/O.
 
 Usage:
     from rcx_lib import RCX
@@ -12,14 +14,19 @@ Usage:
     rcx.beep()
     rcx.motor_on(0)  # Turn on motor A
     rcx.motor_off(0)
-    rcx.stop_all_tasks()
-    rcx.wait(1.0)  # Wait 1 second
     
-    # Send and receive responses
-    success, payload = rcx_tower.send_and_receive(rcx.get_bytecode(), timeout=0.34)
+    # Get bytecode and transmit/receive in one call
+    success, payload = rcx.transceive(timeout=0.34)
 """
 
 import time
+
+# Try to import MicroPython modules (for ESP32)
+try:
+    import machine
+    MICROPYTHON = True
+except ImportError:
+    MICROPYTHON = False
 
 
 class RCX:
@@ -36,6 +43,24 @@ class RCX:
         self.packets = []
         self.preamble = bytes([0x55, 0xFF, 0x00])
 
+        # Initialize UART for IR communication (ESP32 MicroPython only)
+        self.uart = None
+        self.ir_pwm = None
+
+        if MICROPYTHON:
+            try:
+                # 38kHz IR carrier
+                self.ir_pwm = machine.PWM(machine.Pin(2))
+                self.ir_pwm.freq(38000)
+                self.ir_pwm.duty_u16(32768)  # 50% duty cycle
+
+                # UART: 2400 Baud, 8 Bits, ODD Parity, 1 Stop Bit (RCX standard)
+                self.uart = machine.UART(
+                    1, baudrate=2400, bits=8, parity=1, stop=1, tx=17, rx=16)
+            except Exception as e:
+                print(f"Warning: UART initialization failed: {e}")
+                self.uart = None
+
     def _send(self, opcode, params=None):
         """
         Build and queue an RCX packet.
@@ -48,7 +73,10 @@ class RCX:
             params = []
 
         # Apply toggle bit to opcode
-        tx_opcode = opcode | 0x08 if self.toggle_bit else opcode
+        if self.toggle_bit:
+            tx_opcode = opcode | 0x08
+        else:
+            tx_opcode = opcode
         self.toggle_bit = not self.toggle_bit
 
         # Build packet: [preamble, preamble, preamble, opcode, opcode^0xFF, ...]
@@ -63,6 +91,79 @@ class RCX:
         # Add checksum and its complement
         packet.extend([checksum, checksum ^ 0xFF])
         self.packets.append(bytes(packet))
+
+    def _transmit_packet(self, packet_bytes):
+        """
+        Send a single packet over UART with inter-byte delays.
+
+        Args:
+            packet_bytes: bytes to transmit
+
+        Returns:
+            bool: True if transmission successful
+        """
+        if not self.uart:
+            print("Error: UART not initialized")
+            return False
+
+        try:
+            # Send the whole packet; UART hardware handles 2400-baud timing
+            self.uart.write(packet_bytes)
+            # Allow ~4 ms/byte * 9 bytes + inter-packet gap
+            if MICROPYTHON:
+                time.sleep_ms(100)
+            else:
+                time.sleep(0.1)
+
+            return True
+        except Exception as e:
+            print(f"Transmission error: {e}")
+            return False
+
+    def _receive_bytes(self, timeout_ms=340):
+        """
+        Receive bytes from UART with timeout.
+
+        Args:
+            timeout_ms: timeout in milliseconds
+
+        Returns:
+            bytes: received data or empty bytes if timeout
+        """
+        if not self.uart:
+            return b''
+
+        try:
+            received = bytearray()
+            start_time = time.ticks_ms() if MICROPYTHON else time.time() * 1000
+
+            while True:
+                if MICROPYTHON:
+                    elapsed = time.ticks_diff(time.ticks_ms(), start_time)
+                else:
+                    elapsed = (time.time() * 1000) - start_time
+
+                if elapsed > timeout_ms:
+                    break
+
+                # Check for available bytes
+                if self.uart.any():
+                    byte = self.uart.read(1)
+                    if byte:
+                        received.extend(byte)
+                        # Reset timeout after each byte received
+                        start_time = time.ticks_ms() if MICROPYTHON else time.time() * 1000
+                else:
+                    # Small sleep to avoid busy-waiting
+                    if MICROPYTHON:
+                        time.sleep_ms(1)
+                    else:
+                        time.sleep(0.001)
+
+            return bytes(received)
+        except Exception as e:
+            print(f"Reception error: {e}")
+            return b''
 
     def _validate_checksum(self, data):
         """
@@ -272,10 +373,7 @@ class RCX:
 
     def send_and_receive(self, tx_bytes, timeout=0.34, ignore_reply=False):
         """
-        Send command bytes and wait for response.
-
-        This method is intended to be called by the tower/driver code
-        that handles actual serial communication.
+        Send command bytes and wait for response (with actual UART I/O).
 
         Args:
             tx_bytes: bytes to transmit
@@ -285,18 +383,55 @@ class RCX:
         Returns:
             tuple: (success: bool, payload: bytes or None)
         """
+        if not self.uart:
+            print("Error: UART not initialized for communication")
+            return False, None
+
+        # Send the command
+        success = self._transmit_packet(tx_bytes)
+        if not success:
+            return False, None
+
         if ignore_reply:
             return True, None
 
-        # Note: Actual serial communication would happen here
-        # This is a placeholder showing the protocol interface
-        # The ESP32 driver would implement the actual serial I/O
+        # Receive response (convert timeout to ms)
+        timeout_ms = int(timeout * 1000)
+        response = self._receive_bytes(timeout_ms)
 
-        return False, None
+        if not response:
+            print("Error: No response received from RCX")
+            return False, None
+
+        # Process and validate response
+        return self._process_response(response, tx_bytes)
+
+    def transceive(self, timeout=0.34, ignore_reply=False):
+        """
+        Transmit queued commands and receive response in one call.
+
+        This is the main method to use after queueing commands.
+
+        Args:
+            timeout: time to wait for response in seconds
+            ignore_reply: if True, don't validate response
+
+        Returns:
+            tuple: (success: bool, payload: bytes or None)
+        """
+        # Get all queued packets
+        tx_bytes = self.get_bytecode()
+
+        if not tx_bytes:
+            print("Error: No commands queued")
+            return False, None
+
+        # Send and receive
+        return self.send_and_receive(tx_bytes, timeout, ignore_reply)
 
     def beep(self):
         """Play a beep sound on the RCX."""
-        self._send(0x51, [0x01])
+        self._send(0x51, [1])
 
     def motor_on(self, motor_id):
         """
@@ -306,7 +441,7 @@ class RCX:
             motor_id: 0 (A), 1 (B), or 2 (C)
         """
         if 0 <= motor_id <= 2:
-            self._send(0x21, [0x80 | (1 << motor_id)])
+            self._send(33, [128 | (1 << motor_id)])
 
     def motor_off(self, motor_id):
         """
@@ -316,11 +451,11 @@ class RCX:
             motor_id: 0 (A), 1 (B), or 2 (C)
         """
         if 0 <= motor_id <= 2:
-            self._send(0x21, [0x40 | (1 << motor_id)])
+            self._send(33, [64 | (1 << motor_id)])
 
     def stop_all_tasks(self):
         """Stop all running tasks on the RCX."""
-        self._send(0x50)
+        self._send(80)
 
     def set_motor_power(self, motor_id, power):
         """
@@ -331,8 +466,8 @@ class RCX:
             power: 0-7 (power level)
         """
         if 0 <= motor_id <= 2 and 0 <= power <= 7:
-            # Opcode 0x13 sets motor power
-            self._send(0x13, [motor_id, power])
+            # Opcode 19 sets motor power
+            self._send(19, [motor_id, power])
 
     def set_direction(self, motor_id, direction):
         """
@@ -343,8 +478,8 @@ class RCX:
             direction: 0 (fwd), 1 (rev), 2 (brake)
         """
         if 0 <= motor_id <= 2 and 0 <= direction <= 2:
-            # Opcode 0x13 with different param
-            self._send(0x13, [(motor_id << 2) | direction])
+            # Opcode 19 with different param
+            self._send(19, [(motor_id << 2) | direction])
 
     def get_sensor(self, port):
         """
@@ -354,7 +489,7 @@ class RCX:
             port: Sensor port (0-3)
         """
         if 0 <= port <= 3:
-            self._send(0x07, [port])
+            self._send(7, [port])
 
     def wait_seconds(self, seconds):
         """
@@ -370,7 +505,7 @@ class RCX:
             # Param: duration in centiseconds (0-255)
             while centiseconds > 0:
                 duration = min(centiseconds, 255)
-                self._send(0x24, [duration])
+                self._send(36, [duration])
                 centiseconds -= duration
 
     def get_bytecode(self):
@@ -406,21 +541,15 @@ rcx = RCX()
 # from rcx_lib import RCX
 #
 # rcx = RCX()
+#
+# # Queue commands
 # rcx.beep()
 # rcx.motor_on(0)
 #
-# tx_bytes = rcx.get_bytecode()
-#
-# # Transmit via IR (your ESP32 driver handles this)
-# transmit_to_rcx(tx_bytes)  # Call your ESP32 IR transmission function
-#
-# # Receive response (including echo)
-# response = receive_from_rcx(timeout=0.34)  # Call your ESP32 IR receive function
-#
-# # Validate and extract payload
-# success, payload = rcx._process_response(response, tx_bytes)
+# # Send commands and receive response in one call
+# success, payload = rcx.transceive(timeout=0.34)
 #
 # if success:
-#     print(f"Response payload: {payload.hex()}")
+#     print(f"Response OK - Payload: {payload.hex()}")
 # else:
-#     print("Invalid response")
+#     print("Communication failed")

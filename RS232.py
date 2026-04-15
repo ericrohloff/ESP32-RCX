@@ -357,10 +357,29 @@ class CEEO_RS232():
             self.uboard.focus()
 
     async def on_run_main(self, event):
-        if self.uboard.connected:
+        if not self.uboard.connected:
+            return
+        btn = document.getElementById(f'run_main{self.suffix}')
+        orig_text = btn.innerText
+        btn.disabled = True
+        btn.innerText = '⏳ Flashing…'
+        try:
             success = await self.uboard.board.upload('main.py', self.python.code)
-            await self.uboard.board.reset()
-            self.uboard.focus()
+            if success:
+                btn.innerText = '✓ Done!'
+                await asyncio.sleep(1.5)
+                await self.uboard.board.reset()
+            else:
+                btn.innerText = '✗ Failed'
+                await asyncio.sleep(2)
+        except Exception as e:
+            btn.innerText = '✗ Error'
+            window.alert(f'Flash error: {e}')
+            await asyncio.sleep(1.5)
+        finally:
+            btn.innerText = orig_text
+            btn.disabled = False
+        self.uboard.focus()
 
     async def on_spike_wave(self, event):
         import spikeexample
