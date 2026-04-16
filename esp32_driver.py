@@ -398,7 +398,174 @@ class RCX:
             self.wait(duration)
             self.stop()
 
+    # ------------------------------------------------------------------
+    # Program Download (RCX Memory Storage)
+    # ------------------------------------------------------------------
+
+    def _compile_bytecode(self, commands):
+        """
+        Compile a command sequence into RCX stored-program bytecode.
+        Each command is (opcode, params_list).
+
+        Stored bytecode is raw opcode + params bytes — no IR transport
+        overhead (no complement bytes, no toggle bit, no checksum).
+        """
+        bytecode = bytearray()
+        for opcode, params in commands:
+            if params is None:
+                params = []
+            bytecode.append(opcode)
+            bytecode.extend(params)
+        return bytes(bytecode)
+
+    def download_program(self, program_name, commands, slot=0):
+        """
+        Download a program to RCX memory using the standard RCX protocol.
+
+        Protocol:
+          0x35  Begin Program Download — slot, size_lo, size_hi
+          0x45  Download Chunk        — block_num (1-based), data bytes
+
+        Args:
+            program_name: ignored by RCX firmware, kept for logging only
+            commands: List of (opcode, params) tuples
+            slot: Program slot 0-4
+
+        Returns:
+            (success: bool, response: bytes)
+        """
+        if not self.uart:
+            print("RCX: UART not available")
+            return False, b""
+
+        bytecode = self._compile_bytecode(commands)
+        size = len(bytecode)
+
+        # --- Begin Program Download (0x35) ---
+        ok, _ = self._send(0x35, [slot, size & 0xFF, (size >> 8) & 0xFF],
+                           timeout_ms=1000)
+        if not ok:
+            print("RCX: No ACK for Begin Download")
+            return False, b""
+
+        # --- Download Chunks (0x45) ---
+        # Keep chunks small (~20 bytes) so the packet fits the RCX IR buffer
+        # and the ACK comes back before the next chunk is sent.
+        chunk_size = 20
+        block_num = 1
+        for i in range(0, size, chunk_size):
+            chunk = list(bytecode[i:i + chunk_size])
+            ok, _ = self._send(0x45, [block_num] + chunk, timeout_ms=500)
+            if not ok:
+                print("RCX: No ACK for chunk", block_num)
+                return False, b""
+            block_num += 1
+
+        print("RCX: downloaded", size, "bytes as", program_name, "in slot", slot)
+        return True, b""
+
+    def execute_program(self, slot=0):
+        """
+        Execute a program from RCX memory.
+
+        Args:
+            slot: Program slot (0-7)
+
+        Returns:
+            (success: bool, response: bytes)
+        """
+        # Opcode 0x00 starts execution
+        # Parameter is the slot number
+        return self._send(0x00, [slot])
+
+    def stop_program(self):
+        """Stop the currently running program."""
+        return self._send(0x50)  # Stop all tasks
+
+    def delete_program(self, slot=0):
+        """
+        Delete a program from RCX memory.
+
+        Args:
+            slot: Program slot (0-7)
+
+        Returns:
+            (success: bool, response: bytes)
+        """
+        # Opcode 0x26 deletes a program
+        return self._send(0x26, [slot])
+
+    def list_programs(self):
+        """
+        Request list of programs on RCX.
+
+        Returns:
+            (success: bool, response: bytes with program info)
+        """
+        # Opcode 0x25 lists programs
+        return self._send(0x25)
+
 
 # Ready-to-use instance
 rcx = RCX()
 '''
+
+
+# ------------------------------------------------------------------
+# Program Builder - Helper for creating downloadable programs
+# ------------------------------------------------------------------
+
+class ProgramBuilder:
+    """
+    Builder for creating RCX programs from command sequences.
+    Simplifies program creation by handling bytecode compilation.
+    """
+
+    def __init__(self, name="program"):
+        self.name = name
+        self.commands = []
+
+    def add_command(self, opcode, params=None):
+        """Add a command to the program."""
+        self.commands.append((opcode, params or []))
+        return self
+
+    def beep(self, sound=2):
+        """Add beep command."""
+        self.add_command(0x51, [sound])
+        return self
+
+    def motor_on(self, motor_id, direction=0):
+        """Add motor on command."""
+        if 0 <= motor_id <= 2:
+            port = 1 << motor_id
+            flag = 0x80 if direction == 0 else 0x40
+            self.add_command(0x21, [flag | port])
+        return self
+
+    def motor_off(self, motor_id):
+        """Add motor off command."""
+        if 0 <= motor_id <= 2:
+            port = 1 << motor_id
+            self.add_command(0x21, [0x40 | port])
+        return self
+
+    def set_power(self, motor_id, power):
+        """Add set power command."""
+        if 0 <= motor_id <= 2 and 0 <= power <= 7:
+            self.add_command(0x13, [motor_id, power])
+        return self
+
+    def download(self, rcx_instance, slot=None):
+        """Download this program to RCX."""
+        return rcx_instance.download_program(self.name, self.commands, slot)
+
+    def get_commands(self):
+        """Get the command list."""
+        return self.commands
+
+    def get_size(self):
+        """Get approximate compiled bytecode size."""
+        # Each command is roughly 8 bytes (opcode + params + complements + checksum)
+        return len(self.commands) * 8
+

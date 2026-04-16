@@ -146,6 +146,89 @@ rcx.beep()                    # quick test — you should hear a beep</pre>
                     page to load ready-made starter programs into the editor.
                 </div>
 
+                <!-- PROGRAM DOWNLOAD -->
+                <h3>Program Download (Store on RCX)</h3>
+                <p>
+                    Instead of continuously sending IR commands, you can download programs directly to the RCX's memory and execute them standalone. This is more reliable and allows the RCX to run programs without the ESP32 connection.
+                </p>
+
+                <h4>How It Works</h4>
+                <ol class="steps">
+                    <li>Create a program using <code>ProgramBuilder</code></li>
+                    <li>Download it to one of 8 program slots on the RCX</li>
+                    <li>Execute the program anytime using its slot number</li>
+                    <li>Programs persist even after RCX power cycles</li>
+                </ol>
+
+                <h4>Quick Example</h4>
+                <pre>from rcx_driver import rcx, ProgramBuilder
+
+# Create and download a program
+prog = ProgramBuilder("beep_sequence")
+prog.beep()
+prog.beep(sound=3)
+prog.beep(sound=5)
+prog.download(rcx, slot=0)
+
+# Run it anytime
+rcx.execute_program(slot=0)</pre>
+
+                <h4>Program Management</h4>
+                <p>Available methods for program control:</p>
+                <div class="cmd-grid">
+                    <div class="cmd-card">
+                        <div class="tag tag-util">program</div>
+                        <div class="sig">prog.download(rcx, slot=0)</div>
+                        <p>Download a program to RCX memory slot (0-7).</p>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="tag tag-util">program</div>
+                        <div class="sig">rcx.execute_program(slot=0)</div>
+                        <p>Execute a stored program by slot number.</p>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="tag tag-util">program</div>
+                        <div class="sig">rcx.stop_program()</div>
+                        <p>Stop the currently running program.</p>
+                    </div>
+
+                    <div class="cmd-card">
+                        <div class="tag tag-util">program</div>
+                        <div class="sig">rcx.delete_program(slot=0)</div>
+                        <p>Delete a program from RCX memory.</p>
+                    </div>
+                </div>
+
+                <h4>Building Programs with Commands</h4>
+                <pre>from rcx_driver import rcx, ProgramBuilder
+
+prog = ProgramBuilder("motor_test")
+
+# Chain methods for clean syntax
+prog.set_power(0, 5) \
+    .set_power(1, 5) \
+    .motor_on(0) \
+    .motor_on(1)
+
+# Add beep
+prog.beep(sound=3)
+
+# Download and execute
+prog.download(rcx, slot=0)
+rcx.execute_program(0)</pre>
+
+                <div class="note">
+                    <b>Why Program Download?</b><br>
+                    <ul style="margin:8px 0;padding-left:20px;">
+                        <li>No IR connection needed after download</li>
+                        <li>Programs run on RCX independently</li>
+                        <li>Faster and more reliable</li>
+                        <li>Store up to 8 different programs</li>
+                    </ul>
+                </div>
+
                 <!-- HIGH-LEVEL MOTION -->
                 <h3>High-Level Motion Commands</h3>
                 <p>

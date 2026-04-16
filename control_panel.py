@@ -219,8 +219,20 @@ def on_load_template(event):
         editor.code = code
         log_to_ui(f"✓ Template loaded: {key}")
         log_to_ui("→ Review code in editor, then connect to ESP32 and flash when ready")
+        # Show expected packets for this template
+        core.display_template_packets(key)
     else:
         log_to_ui("Error: Editor not found")
+
+
+@when("change", "#template-select")
+def on_template_selected(event):
+    """Show packet preview when template is selected."""
+    sel = document.getElementById("template-select")
+    key = sel.value if sel else ""
+    if key:
+        core.display_template_packets(key)
+        log_to_ui(f"Showing packets for: {key}")
 
 
 # File listing / load / flash handlers (moved from main)
@@ -287,21 +299,39 @@ async def flash_code(event):
     if not serial_board.is_connected():
         log_to_ui("Connect ESP32 first!")
         return
-    user_logic = document.querySelector("#code-editor").value
-    try:
-        import esp32_driver
-        driver_code = esp32_driver.code
-    except Exception as e:
-        log_to_ui(f"Error: Could not import esp32_driver: {e}")
+
+    # Get current template selection to determine which program to download
+    template_select = document.querySelector("#template-select")
+    template_name = template_select.value if template_select else ""
+
+    if not template_name:
+        log_to_ui("Select a template to download as a program")
         return
-    full_script = driver_code + "\n\n# --- User Logic ---\n" + user_logic
-    log_to_ui("Flashing script to ESP32...")
+
     try:
-        success = await serial_board.board.upload("main.py", full_script)
-        if success:
-            log_to_ui("✓ Script uploaded successfully to main.py")
-            log_to_ui("Board will run this script on next reboot")
+        # Get template program commands
+        commands = core.get_template_program_commands(template_name)
+        if not commands:
+            log_to_ui(f"Template '{template_name}' not found")
+            return
+
+        # Send download command to RCX via ESP32
+        # RCX handles program slot allocation
+        download_code = f"""
+from rcx_driver import rcx
+commands = {repr(commands)}
+ok, resp = rcx.download_program("{template_name}", commands)
+if ok:
+    print("✓ Program downloaded to RCX: {template_name}")
+else:
+    print("✗ Download failed")
+"""
+        log_to_ui(f"Downloading program '{template_name}' to RCX...")
+        result = await serial_board.board.eval(download_code, hidden=False)
+        if result and "✓" in str(result):
+            log_to_ui(f"✓ Program '{template_name}' in RCX slot 0 — run with: rcx.execute_program(0)")
         else:
-            log_to_ui("✗ Upload failed")
+            log_to_ui(f"✗ Download may have failed — check RCX IR connection")
+
     except Exception as e:
-        log_to_ui(f"Flash Error: {e}")
+        log_to_ui(f"Error: {e}")
