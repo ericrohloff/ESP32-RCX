@@ -117,6 +117,15 @@ async def on_stop(event):
     await send_to_esp32(pkt)
 
 
+@when("click", ".btn-clear")
+def on_clear_visualizer(event):
+    """Clear the packet stream visualizer."""
+    stream_div = document.querySelector("#packet-stream")
+    if stream_div:
+        stream_div.innerHTML = ""
+        log_to_ui("Packet visualizer cleared")
+
+
 # ── Templates ──────────────────────────────────────────────────────────────
 
 TEMPLATES = {
@@ -163,16 +172,39 @@ rcx.beep()
 from rcx_driver import rcx
 
 # Spin left then right
-rcx.turn_left(speed=5, duration=1.0)
-rcx.turn_right(speed=5, duration=1.0)
+rcx.spin_left(speed=5, duration=1.0)
+rcx.spin_right(speed=5, duration=1.0)
 rcx.stop()
 rcx.beep()
+""",
+    "square_pattern": """\
+from rcx_driver import rcx
+
+# Drive in a square pattern
+for i in range(4):
+    rcx.move(speed=5, duration=1.5)
+    rcx.turn_right(speed=4, duration=0.5)
+
+rcx.stop()
+rcx.beep(sound=3)
+""",
+    "acceleration": """\
+from rcx_driver import rcx
+
+# Test speeds 2-7
+for speed in [2, 3, 4, 5, 6, 7]:
+    rcx.move(speed=speed, duration=0.8)
+    rcx.wait(0.3)
+
+rcx.stop()
+rcx.beep(sound=2)
 """,
 }
 
 
 @when("click", "#btn-load-template")
 def on_load_template(event):
+    """Load template code into the editor without flashing."""
     sel = document.getElementById("template-select")
     key = sel.value if sel else ""
     if not key:
@@ -185,9 +217,10 @@ def on_load_template(event):
     editor = document.getElementById("mpCode1")
     if editor:
         editor.code = code
-        log_to_ui(f"Template loaded: {key}")
+        log_to_ui(f"✓ Template loaded: {key}")
+        log_to_ui("→ Review code in editor, then connect to ESP32 and flash when ready")
     else:
-        log_to_ui("Editor not found.")
+        log_to_ui("Error: Editor not found")
 
 
 # File listing / load / flash handlers (moved from main)

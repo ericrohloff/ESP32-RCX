@@ -46,13 +46,11 @@
 
             <div class="control-panel">
                 <h3 style="margin-top: 0">Live Diagnostics</h3>
-                <button class="btn-test" py-click="live_ping">Ping RCX</button>
-                <button class="btn-test" py-click="live_beep">Play Beep</button>
+                <button class="btn-test">Ping RCX</button>
+                <button class="btn-test">Play Beep</button>
                 <div class="packet-stream-container">
                     <h4>Packet Visualizer</h4>
-                    <button class="btn-clear" py-click="clear_visualizer">
-                        Clear
-                    </button>
+                    <button class="btn-clear">Clear</button>
                     <div
                         id="packet-stream"
                         style="
@@ -92,6 +90,8 @@
                         <option value="drive_pattern">Drive Pattern</option>
                         <option value="motor_test">Motor A / B Test</option>
                         <option value="spin_turn">Spin Left &amp; Right</option>
+                        <option value="square_pattern">Square Pattern</option>
+                        <option value="acceleration">Speed Test</option>
                     </select>
                     <button
                         id="btn-load-template"

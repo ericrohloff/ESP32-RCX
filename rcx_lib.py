@@ -85,11 +85,13 @@ class RCX:
 
         # Add parameters with complement bytes
         for p in params:
-            packet.extend([p, p ^ 0xFF])
+            packet.append(p)
+            packet.append(p ^ 0xFF)
             checksum = (checksum + p) % 256
 
         # Add checksum and its complement
-        packet.extend([checksum, checksum ^ 0xFF])
+        packet.append(checksum)
+        packet.append(checksum ^ 0xFF)
         self.packets.append(bytes(packet))
 
     def _transmit_packet(self, packet_bytes):

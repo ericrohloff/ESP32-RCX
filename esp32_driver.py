@@ -90,9 +90,11 @@ class RCX:
         pkt = bytearray([0x55, 0xFF, 0x00, tx_op, tx_op ^ 0xFF])
         ck = tx_op
         for p in params:
-            pkt.extend([p, p ^ 0xFF])
+            pkt.append(p)
+            pkt.append(p ^ 0xFF)
             ck = (ck + p) & 0xFF
-        pkt.extend([ck, ck ^ 0xFF])
+        pkt.append(ck)
+        pkt.append(ck ^ 0xFF)
         return bytes(pkt)
 
     def _send(self, opcode, params=None, timeout_ms=500, ignore_reply=False):
@@ -310,6 +312,34 @@ class RCX:
             self.wait(duration)
             self.stop()
 
+    def spin_left(self, speed=7, duration=None):
+        """
+        Spin left in place: motor A forward, motor B reverse at different power.
+        speed   : 0-7
+        duration: seconds; None = until stop()
+        """
+        self.set_power(0, speed)
+        self.set_power(1, speed)
+        self.motor_on(0, direction=0)
+        self.motor_on(1, direction=1)
+        if duration is not None:
+            self.wait(duration)
+            self.stop()
+
+    def spin_right(self, speed=7, duration=None):
+        """
+        Spin right in place: motor A reverse, motor B forward.
+        speed   : 0-7
+        duration: seconds; None = until stop()
+        """
+        self.set_power(0, speed)
+        self.set_power(1, speed)
+        self.motor_on(0, direction=1)
+        self.motor_on(1, direction=0)
+        if duration is not None:
+            self.wait(duration)
+            self.stop()
+
     def stop(self):
         """Coast all three motors to a stop."""
         self.motor_off(0)
@@ -325,6 +355,48 @@ class RCX:
     def wait(self, seconds):
         """Pause execution for the given number of seconds."""
         time.sleep(seconds)
+
+    def set_all_power(self, power):
+        """Set power level for all motors (A, B, and C)."""
+        self.set_power(0, power)
+        self.set_power(1, power)
+        self.set_power(2, power)
+
+    def play_sound(self, sound=2):
+        """Alias for beep(). Play a sound on the RCX."""
+        return self.beep(sound)
+
+    def stop_motor(self, motor_id):
+        """Stop a single motor (alias for motor_off)."""
+        return self.motor_off(motor_id)
+
+    def reverse_turn_left(self, speed=7, duration=None):
+        """
+        Backup and turn left: motor A reverse, motor B forward.
+        speed   : 0-7
+        duration: seconds; None = until stop()
+        """
+        self.set_power(0, speed)
+        self.set_power(1, speed)
+        self.motor_on(0, direction=1)
+        self.motor_on(1, direction=0)
+        if duration is not None:
+            self.wait(duration)
+            self.stop()
+
+    def reverse_turn_right(self, speed=7, duration=None):
+        """
+        Backup and turn right: motor A forward, motor B reverse.
+        speed   : 0-7
+        duration: seconds; None = until stop()
+        """
+        self.set_power(0, speed)
+        self.set_power(1, speed)
+        self.motor_on(0, direction=0)
+        self.motor_on(1, direction=1)
+        if duration is not None:
+            self.wait(duration)
+            self.stop()
 
 
 # Ready-to-use instance

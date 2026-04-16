@@ -90,6 +90,23 @@ body {
     gap: 10px;
 }
 
+.rs232-area h3,
+.control-panel h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    color: #0b1220;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.rs232-area h4,
+.control-panel h4 {
+    margin: 12px 0 8px 0;
+    font-size: 0.95rem;
+    color: #1f2937;
+    font-weight: 600;
+}
+
 /* Packet visualizer */
 .packet-stream-container h4 {
     margin: 0 0 6px 0;
@@ -118,27 +135,50 @@ button {
     color: #0b1220;
     transition:
         transform 0.08s ease,
-        opacity 0.1s ease;
+        opacity 0.1s ease,
+        box-shadow 0.1s ease;
+    font-size: 0.9rem;
 }
 button:hover {
     transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 button:active {
-    transform: translateY(1px);
+    transform: translateY(0px);
 }
 
 .btn-connect {
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent) 0%, #063fb2 100%);
     color: white;
+    box-shadow: 0 2px 4px rgba(10, 69, 195, 0.2);
 }
 .btn-connect:hover {
     opacity: 0.95;
+    box-shadow: 0 4px 8px rgba(10, 69, 195, 0.3);
+}
+
+.btn-test {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border: 1px solid var(--border);
+    color: #1f2937;
+    flex: 1;
+    min-width: 90px;
+}
+
+.btn-test:hover {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
 }
 
 .btn-flash {
-    background: var(--accent-2);
+    background: linear-gradient(135deg, var(--accent-2) 0%, #059669 100%);
     color: white;
     width: 100%;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.btn-flash:hover {
+    opacity: 0.95;
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
 
 /* small muted buttons */
@@ -148,6 +188,11 @@ button:active {
     color: var(--muted);
     padding: 6px 8px;
     font-size: 0.85rem;
+}
+
+.btn-clear:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
 }
 
 /* Packet byte chips */
@@ -261,3 +306,250 @@ textarea {
     color: var(--accent);
     font-weight: 700;
 }
+
+/* ── Serial Terminal Styling (RS232) ───────────────────────────────────── */
+
+/* Terminal container and overall RS232 area */
+#all_things_rs232 {
+    margin-top: 12px;
+}
+
+/* Terminal output display */
+#repl-terminal {
+    background: #0f1419;
+    color: #10b981;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "Courier New", "JetBrains Mono", monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Terminal text - better readability */
+#repl-terminal {
+    caret-color: #10b981;
+}
+
+/* Status bar styling */
+#status-bar {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: #f0f9ff;
+    color: #0369a1;
+    border: 1px solid #7dd3fc;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+#status-bar[style*="color: rgb(46, 204, 113)"],
+#status-bar[style*="color: #2ecc71"] {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+#status-bar[style*="color: rgb(231, 76, 60)"],
+#status-bar[style*="color: #e74c3c"] {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+/* Control buttons group */
+.terminal-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+#connect-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    padding: 9px 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+    transition: all 0.15s ease;
+}
+
+#connect-btn:hover {
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
+}
+
+#connect-btn:active {
+    transform: translateY(0);
+}
+
+/* File management section */
+.file-management {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.file-management h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    color: #0b1220;
+    font-weight: 600;
+}
+
+#file-selector,
+#code-editor {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    background: white;
+}
+
+#code-editor {
+    font-family: "Courier New", monospace;
+    min-height: 100px;
+    resize: vertical;
+    color: #0b1220;
+}
+
+#code-editor:focus,
+#file-selector:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(10, 69, 195, 0.1);
+}
+
+/* Button group styling */
+.file-btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.file-btn-group button {
+    flex: 1;
+    min-width: 100px;
+    font-size: 0.85rem;
+    padding: 7px 10px;
+}
+
+#list-board-files-btn {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid var(--border);
+}
+
+#list-board-files-btn:hover {
+    background: #e5e7eb;
+}
+
+#load-file-btn {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+#load-file-btn:hover {
+    background: #bfdbfe;
+}
+
+#flash-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+#flash-btn:hover {
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Console log area */
+#console-log {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+    max-height: 150px;
+    overflow-y: auto;
+    color: #1e293b;
+}
+
+#console-log > div {
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+    word-break: break-word;
+}
+
+#console-log > div:last-child {
+    border-bottom: none;
+}
+
+/* Scrollbar styling for terminal */
+#repl-terminal::-webkit-scrollbar,
+#console-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+#repl-terminal::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 3px;
+}
+
+#repl-terminal::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 3px;
+}
+
+#repl-terminal::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+}
+
+#console-log::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+#console-log::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#console-log::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    #repl-terminal {
+        min-height: 150px;
+        max-height: 300px;
+    }
+
+    .file-management {
+        padding: 10px;
+    }
+
+    .terminal-controls {
+        gap: 6px;
+    }
+}
+
