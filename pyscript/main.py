@@ -4,7 +4,6 @@ from js import Uint8Array
 import json
 import RS232
 import control_panel
-from rcx_lib import RCX
 
 
 # Core utilities for packet creation and visualization.
@@ -230,5 +229,3 @@ def display_template_packets(template_name):
         stream_div.appendChild(container)
 
     stream_div.scrollTop = 0
-
-
