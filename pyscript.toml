@@ -1,11 +1,10 @@
-name = "Test"
+name = "RoboLab"
 
 [files]
-"main.py" = "./main.py"
-"esp32_driver.py" = "./esp32_driver.py"
-"control_panel.py" = "./control_panel.py"
-"RS232.py" = "./RS232.py"
-"rcx_lib.py" = "./rcx_lib.py"
+"main.py" = "./pyscript/main.py"
+"esp32_driver.py" = "./pyscript/esp32_driver.py"
+"control_panel.py" = "./pyscript/control_panel.py"
+"RS232.py" = "./pyscript/RS232.py"
 
 [js_modules.main]
 "https://cdn.jsdelivr.net/npm/micro-repl@0.8.2/serial.js" = "micro_repl"

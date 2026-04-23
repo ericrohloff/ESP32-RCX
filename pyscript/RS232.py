@@ -467,16 +467,31 @@ class CEEO_RS232():
         if not self.uboard.connected:
             window.alert("Please connect to the ESP32 first.")
             return
+
         import esp32_driver
-        driver_code = esp32_driver.code
-        self.install_btn.innerText = "Installing..."
+
+        files = [
+            ('rcx_driver.py',  esp32_driver.code),
+            ('motion_rcx.py',  esp32_driver.motion_code),
+            ('motors_rcx.py',  esp32_driver.motors_code),
+            ('sound_rcx.py',   esp32_driver.sound_code),
+            ('sensors_rcx.py', esp32_driver.sensors_code),
+            ('display_rcx.py', esp32_driver.display_code),
+            ('system_rcx.py',  esp32_driver.system_code),
+        ]
+
+        installed = []
         try:
-            # Upload the file as 'rcx_driver.py'
-            success = await self.uboard.board.upload('rcx_driver.py', driver_code)
-            if success:
-                window.alert(
-                    "rcx_driver.py installed successfully! You can now 'import rcx_driver' in your scripts.")
-                await self.re_list(None)  # Refresh the file list
+            for filename, code in files:
+                success = await self.uboard.board.upload(filename, code)
+                if success:
+                    installed.append(filename)
+                else:
+                    window.alert(f"Failed to install {filename}")
+                    return
+            window.alert(
+                f"Installed {len(installed)} files: {', '.join(installed)}")
+            await self.re_list(None)
         except Exception as e:
             window.alert(f"Installation failed: {e}")
         finally:

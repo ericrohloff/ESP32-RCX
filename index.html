@@ -15,19 +15,17 @@
         <script src="/mini-coi.js"></script>
     </head>
     <body>
-        <script type="py" src="main.py" config="pyscript.toml"></script>
+        <script type="py" src="pyscript/main.py" config="pyscript.toml"></script>
         <script
             type="py"
-            src="control_panel.py"
+            src="pyscript/control_panel.py"
             config="pyscript.toml"
         ></script>
         <header class="app-header">
             <div class="header-content">
                 <h1>ESP32-RCX Programmer</h1>
                 <nav class="header-nav">
-                    <a href="commands.html" class="header-link" target="_blank"
-                        >Commands</a
-                    >
+                    <a href="#" class="header-link" id="open-commands-btn">Commands</a>
                 </nav>
             </div>
         </header>
@@ -36,7 +34,7 @@
             <div class="rs232-area">
                 <script
                     type="mpy-editor"
-                    src="./main.py"
+                    src="./pyscript/main.py"
                     config="./pyscript.toml"
                     env="su25"
                     setup
@@ -119,5 +117,27 @@
                 </div>
             </div>
         </div>
+    <!-- Commands modal -->
+    <div id="commands-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5);">
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; margin:24px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid #e5e7eb; flex-shrink:0;">
+                <strong>RCX Library Reference</strong>
+                <button id="close-commands-btn" style="font-size:1.2rem; background:none; border:none; cursor:pointer; color:#6b7280; padding:4px 8px;">✕</button>
+            </div>
+            <iframe src="commands.html" style="flex:1; border:none; width:100%;"></iframe>
+        </div>
+    </div>
+    <script>
+        document.getElementById('open-commands-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('commands-modal').style.display = 'block';
+        });
+        document.getElementById('close-commands-btn').addEventListener('click', function() {
+            document.getElementById('commands-modal').style.display = 'none';
+        });
+        document.getElementById('commands-modal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+    </script>
     </body>
 </html>
