@@ -300,38 +300,19 @@ async def flash_code(event):
         log_to_ui("Connect ESP32 first!")
         return
 
-    # Get current template selection to determine which program to download
-    template_select = document.querySelector("#template-select")
-    template_name = template_select.value if template_select else ""
+    editor = document.getElementById("mpCode1")
+    if not editor:
+        log_to_ui("Error: Editor not found")
+        return
 
-    if not template_name:
-        log_to_ui("Select a template to download as a program")
+    code = editor.code
+    if not code or not code.strip():
+        log_to_ui("Editor is empty — load a template first")
         return
 
     try:
-        # Get template program commands
-        commands = core.get_template_program_commands(template_name)
-        if not commands:
-            log_to_ui(f"Template '{template_name}' not found")
-            return
-
-        # Send download command to RCX via ESP32
-        # RCX handles program slot allocation
-        download_code = f"""
-from rcx_driver import rcx
-commands = {repr(commands)}
-ok, resp = rcx.download_program("{template_name}", commands)
-if ok:
-    print("✓ Program downloaded to RCX: {template_name}")
-else:
-    print("✗ Download failed")
-"""
-        log_to_ui(f"Downloading program '{template_name}' to RCX...")
-        result = await serial_board.board.eval(download_code, hidden=False)
-        if result and "✓" in str(result):
-            log_to_ui(f"✓ Program '{template_name}' in RCX slot 0 — run with: rcx.execute_program(0)")
-        else:
-            log_to_ui(f"✗ Download may have failed — check RCX IR connection")
-
+        log_to_ui("Running on ESP32...")
+        await serial_board.board.eval(code, hidden=False)
+        log_to_ui("✓ Done")
     except Exception as e:
         log_to_ui(f"Error: {e}")

@@ -6,7 +6,12 @@
         <link rel="stylesheet" href="styles.css" />
         <!-- Commands page needs scrolling and its own layout -->
         <style>
-            html, body { overflow: auto; height: auto; background: var(--bg); }
+            html,
+            body {
+                overflow: auto;
+                height: auto;
+                background: var(--bg);
+            }
             .container {
                 display: grid;
                 grid-template-columns: 1fr 300px;
@@ -32,7 +37,9 @@
                 margin: 14px 0;
             }
             @media (max-width: 700px) {
-                .cmd-grid { grid-template-columns: 1fr; }
+                .cmd-grid {
+                    grid-template-columns: 1fr;
+                }
             }
             .cmd-card {
                 background: #f8fafc;
@@ -68,10 +75,22 @@
                 border-radius: 20px;
                 margin-bottom: 6px;
             }
-            .tag-motion  { background:#dbeafe; color:#1e40af; }
-            .tag-motor   { background:#dcfce7; color:#065f46; }
-            .tag-sound   { background:#fef9c3; color:#713f12; }
-            .tag-util    { background:#f3e8ff; color:#6b21a8; }
+            .tag-motion {
+                background: #dbeafe;
+                color: #1e40af;
+            }
+            .tag-motor {
+                background: #dcfce7;
+                color: #065f46;
+            }
+            .tag-sound {
+                background: #fef9c3;
+                color: #713f12;
+            }
+            .tag-util {
+                background: #f3e8ff;
+                color: #6b21a8;
+            }
             .steps {
                 counter-reset: step;
                 list-style: none;
@@ -122,10 +141,8 @@
         </header>
 
         <div class="container">
-
             <!-- ── Left: main docs ─────────────────────────────────────── -->
             <div class="editor-section">
-
                 <!-- SETUP -->
                 <h3>Setup</h3>
                 <p>
@@ -133,13 +150,24 @@
                     import it in every script you write.
                 </p>
                 <ol class="steps">
-                    <li>Connect to the ESP32 using the serial terminal in the app.</li>
-                    <li>Click <b>Install RCX Lib</b> — this uploads <code>rcx_driver.py</code> to the ESP32 filesystem.</li>
-                    <li>Write your script using the commands below, then click <b>run as main.py</b> to flash and run it.</li>
+                    <li>
+                        Connect to the ESP32 using the serial terminal in the
+                        app.
+                    </li>
+                    <li>
+                        Click <b>Install RCX Lib</b> — this uploads
+                        <code>rcx_driver.py</code> to the ESP32 filesystem.
+                    </li>
+                    <li>
+                        Write your script using the commands below, then click
+                        <b>run as main.py</b> to flash and run it.
+                    </li>
                 </ol>
-                <pre>from rcx_driver import rcx   # always start with this line
+                <pre>
+from rcx_driver import rcx   # always start with this line
 
-rcx.beep()                    # quick test — you should hear a beep</pre>
+rcx.beep()                    # quick test — you should hear a beep</pre
+                >
 
                 <div class="note">
                     <b>Tip:</b> Use the <b>Code Templates</b> panel on the main
@@ -149,7 +177,10 @@ rcx.beep()                    # quick test — you should hear a beep</pre>
                 <!-- PROGRAM DOWNLOAD -->
                 <h3>Program Download (Store on RCX)</h3>
                 <p>
-                    Instead of continuously sending IR commands, you can download programs directly to the RCX's memory and execute them standalone. This is more reliable and allows the RCX to run programs without the ESP32 connection.
+                    Instead of continuously sending IR commands, you can
+                    download programs directly to the RCX's memory and execute
+                    them standalone. This is more reliable and allows the RCX to
+                    run programs without the ESP32 connection.
                 </p>
 
                 <h4>How It Works</h4>
@@ -161,7 +192,8 @@ rcx.beep()                    # quick test — you should hear a beep</pre>
                 </ol>
 
                 <h4>Quick Example</h4>
-                <pre>from rcx_driver import rcx, ProgramBuilder
+                <pre>
+from rcx_driver import rcx, ProgramBuilder
 
 # Create and download a program
 prog = ProgramBuilder("beep_sequence")
@@ -171,7 +203,8 @@ prog.beep(sound=5)
 prog.download(rcx, slot=0)
 
 # Run it anytime
-rcx.execute_program(slot=0)</pre>
+rcx.execute_program(slot=0)</pre
+                >
 
                 <h4>Program Management</h4>
                 <p>Available methods for program control:</p>
@@ -202,7 +235,8 @@ rcx.execute_program(slot=0)</pre>
                 </div>
 
                 <h4>Building Programs with Commands</h4>
-                <pre>from rcx_driver import rcx, ProgramBuilder
+                <pre>
+from rcx_driver import rcx, ProgramBuilder
 
 prog = ProgramBuilder("motor_test")
 
@@ -217,11 +251,12 @@ prog.beep(sound=3)
 
 # Download and execute
 prog.download(rcx, slot=0)
-rcx.execute_program(0)</pre>
+rcx.execute_program(0)</pre
+                >
 
                 <div class="note">
-                    <b>Why Program Download?</b><br>
-                    <ul style="margin:8px 0;padding-left:20px;">
+                    <b>Why Program Download?</b><br />
+                    <ul style="margin: 8px 0; padding-left: 20px">
                         <li>No IR connection needed after download</li>
                         <li>Programs run on RCX independently</li>
                         <li>Faster and more reliable</li>
@@ -242,28 +277,40 @@ rcx.execute_program(0)</pre>
                         <div class="tag tag-motion">motion</div>
                         <div class="sig">rcx.move(speed=7, duration=None)</div>
                         <p>Drive forward on motors A and B.</p>
-                        <p><b>speed</b> 0–7 &nbsp;|&nbsp; <b>duration</b> seconds, or omit to run until <code>stop()</code></p>
-                        <pre>rcx.move(speed=5, duration=2.0)
-# moves 2 s then auto-stops</pre>
+                        <p>
+                            <b>speed</b> 0–7 &nbsp;|&nbsp;
+                            <b>duration</b> seconds, or omit to run until
+                            <code>stop()</code>
+                        </p>
+                        <pre>
+rcx.move(speed=5, duration=2.0)
+# moves 2 s then auto-stops</pre
+                        >
                     </div>
 
                     <div class="cmd-card">
                         <div class="tag tag-motion">motion</div>
-                        <div class="sig">rcx.backward(speed=7, duration=None)</div>
+                        <div class="sig">
+                            rcx.backward(speed=7, duration=None)
+                        </div>
                         <p>Drive in reverse on motors A and B.</p>
                         <pre>rcx.backward(speed=4, duration=1.5)</pre>
                     </div>
 
                     <div class="cmd-card">
                         <div class="tag tag-motion">motion</div>
-                        <div class="sig">rcx.turn_left(speed=7, duration=None)</div>
+                        <div class="sig">
+                            rcx.turn_left(speed=7, duration=None)
+                        </div>
                         <p>Pivot left: motor A forward, motor B reverse.</p>
                         <pre>rcx.turn_left(duration=0.5)</pre>
                     </div>
 
                     <div class="cmd-card">
                         <div class="tag tag-motion">motion</div>
-                        <div class="sig">rcx.turn_right(speed=7, duration=None)</div>
+                        <div class="sig">
+                            rcx.turn_right(speed=7, duration=None)
+                        </div>
                         <p>Pivot right: motor A reverse, motor B forward.</p>
                         <pre>rcx.turn_right(duration=0.5)</pre>
                     </div>
@@ -287,17 +334,22 @@ rcx.execute_program(0)</pre>
                 <h3>Individual Motor Commands</h3>
                 <p>
                     Use these when you need to control motors A, B, or C
-                    independently. Motor IDs: <b>0 = A</b>, <b>1 = B</b>, <b>2 = C</b>.
+                    independently. Motor IDs: <b>0 = A</b>, <b>1 = B</b>,
+                    <b>2 = C</b>.
                 </p>
 
                 <div class="cmd-grid">
                     <div class="cmd-card">
                         <div class="tag tag-motor">motor</div>
-                        <div class="sig">rcx.motor_on(motor_id, direction=0)</div>
+                        <div class="sig">
+                            rcx.motor_on(motor_id, direction=0)
+                        </div>
                         <p>Turn on a single motor.</p>
                         <p><b>direction</b>: 0 = forward, 1 = reverse</p>
-                        <pre>rcx.motor_on(0)           # Motor A forward
-rcx.motor_on(2, direction=1)  # Motor C reverse</pre>
+                        <pre>
+rcx.motor_on(0)           # Motor A forward
+rcx.motor_on(2, direction=1)  # Motor C reverse</pre
+                        >
                     </div>
 
                     <div class="cmd-card">
@@ -317,10 +369,15 @@ rcx.motor_on(2, direction=1)  # Motor C reverse</pre>
                     <div class="cmd-card">
                         <div class="tag tag-motor">motor</div>
                         <div class="sig">rcx.set_power(motor_id, power)</div>
-                        <p>Set power level before calling <code>motor_on()</code>.</p>
+                        <p>
+                            Set power level before calling
+                            <code>motor_on()</code>.
+                        </p>
                         <p><b>power</b>: 0–7</p>
-                        <pre>rcx.set_power(0, 4)   # Motor A at half power
-rcx.motor_on(0)</pre>
+                        <pre>
+rcx.set_power(0, 4)   # Motor A at half power
+rcx.motor_on(0)</pre
+                        >
                     </div>
                 </div>
 
@@ -331,15 +388,49 @@ rcx.motor_on(0)</pre>
                         <div class="tag tag-sound">sound</div>
                         <div class="sig">rcx.beep(sound=2)</div>
                         <p>Play one of the RCX's built-in sounds.</p>
-                        <table style="font-size:0.82rem;width:100%;margin-top:6px;border-collapse:collapse;">
-                            <tr><td style="padding:2px 8px 2px 0"><code>sound=1</code></td><td>blip</td></tr>
-                            <tr><td style="padding:2px 8px 2px 0"><code>sound=2</code></td><td>beep <em>(default)</em></td></tr>
-                            <tr><td style="padding:2px 8px 2px 0"><code>sound=3</code></td><td>sweep</td></tr>
-                            <tr><td style="padding:2px 8px 2px 0"><code>sound=4</code></td><td>pling</td></tr>
-                            <tr><td style="padding:2px 8px 2px 0"><code>sound=5</code></td><td>buzz</td></tr>
+                        <table
+                            style="
+                                font-size: 0.82rem;
+                                width: 100%;
+                                margin-top: 6px;
+                                border-collapse: collapse;
+                            "
+                        >
+                            <tr>
+                                <td style="padding: 2px 8px 2px 0">
+                                    <code>sound=1</code>
+                                </td>
+                                <td>blip</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 8px 2px 0">
+                                    <code>sound=2</code>
+                                </td>
+                                <td>beep <em>(default)</em></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 8px 2px 0">
+                                    <code>sound=3</code>
+                                </td>
+                                <td>sweep</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 8px 2px 0">
+                                    <code>sound=4</code>
+                                </td>
+                                <td>pling</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 8px 2px 0">
+                                    <code>sound=5</code>
+                                </td>
+                                <td>buzz</td>
+                            </tr>
                         </table>
-                        <pre>rcx.beep()          # default beep
-rcx.beep(sound=4)   # pling</pre>
+                        <pre>
+rcx.beep()          # default beep
+rcx.beep(sound=4)   # pling</pre
+                        >
                     </div>
                 </div>
 
@@ -358,11 +449,13 @@ rcx.beep(sound=4)   # pling</pre>
                         <div class="sig">rcx.ping()</div>
                         <p>
                             Send an alive-check to the RCX. Returns
-                            <code>(True, b"")</code> if the RCX responds.
-                            Use this to verify IR is working.
+                            <code>(True, b"")</code> if the RCX responds. Use
+                            this to verify IR is working.
                         </p>
-                        <pre>ok, _ = rcx.ping()
-print("alive" if ok else "no response")</pre>
+                        <pre>
+ok, _ = rcx.ping()
+print("alive" if ok else "no response")</pre
+                        >
                     </div>
                 </div>
 
@@ -370,17 +463,20 @@ print("alive" if ok else "no response")</pre>
                 <h3>Example Programs</h3>
 
                 <h4>Square drive</h4>
-                <pre>from rcx_driver import rcx
+                <pre>
+from rcx_driver import rcx
 
 for _ in range(4):
     rcx.move(speed=6, duration=1.5)    # straight
     rcx.turn_right(speed=5, duration=0.6)  # ~90 °
 
 rcx.stop()
-rcx.beep()</pre>
+rcx.beep()</pre
+                >
 
                 <h4>Motor power ramp</h4>
-                <pre>from rcx_driver import rcx
+                <pre>
+from rcx_driver import rcx
 
 for power in range(8):           # 0 → 7
     rcx.set_power(0, power)
@@ -388,27 +484,47 @@ for power in range(8):           # 0 → 7
     rcx.wait(0.4)
 
 rcx.motor_off(0)
-rcx.beep()</pre>
+rcx.beep()</pre
+                >
 
                 <h4>Back and forth</h4>
-                <pre>from rcx_driver import rcx
+                <pre>
+from rcx_driver import rcx
 
 for _ in range(3):
     rcx.move(speed=7, duration=1.0)
     rcx.backward(speed=7, duration=1.0)
 
 rcx.stop()
-rcx.beep()</pre>
-
+rcx.beep()</pre
+                >
             </div>
 
             <!-- ── Right: quick-ref card ───────────────────────────────── -->
-            <div class="control-panel" style="position:sticky;top:20px;">
-                <h3 style="margin-top:0">Quick Reference</h3>
+            <div class="control-panel" style="position: sticky; top: 20px">
+                <h3 style="margin-top: 0">Quick Reference</h3>
 
-                <p style="font-size:0.82rem;color:var(--muted);margin:0 0 10px">All commands in one place.</p>
+                <p
+                    style="
+                        font-size: 0.82rem;
+                        color: var(--muted);
+                        margin: 0 0 10px;
+                    "
+                >
+                    All commands in one place.
+                </p>
 
-                <pre style="font-size:0.78rem;line-height:1.7;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:12px;overflow-x:auto;">
+                <pre
+                    style="
+                        font-size: 0.78rem;
+                        line-height: 1.7;
+                        background: #f8fafc;
+                        border: 1px solid var(--border);
+                        border-radius: 6px;
+                        padding: 12px;
+                        overflow-x: auto;
+                    "
+                >
 <b style="color:var(--accent)"># Setup</b>
 from rcx_driver import rcx
 
@@ -434,19 +550,28 @@ rcx.wait(seconds)
 rcx.ping()
                 </pre>
 
-                <a href="index.html" class="btn-connect"
-                   style="display:block;text-align:center;text-decoration:none;padding:10px;border-radius:6px;margin-top:8px;">
+                <a
+                    href="index.html"
+                    class="btn-connect"
+                    style="
+                        display: block;
+                        text-align: center;
+                        text-decoration: none;
+                        padding: 10px;
+                        border-radius: 6px;
+                        margin-top: 8px;
+                    "
+                >
                     Open App
                 </a>
 
-                <div class="note" style="margin-top:14px;">
-                    <b>IR pin defaults</b><br>
-                    TX&nbsp;= pin&nbsp;17 &nbsp;|&nbsp; RX&nbsp;= pin&nbsp;16<br>
-                    IR carrier&nbsp;= pin&nbsp;2 (38&nbsp;kHz)<br>
+                <div class="note" style="margin-top: 14px">
+                    <b>IR pin defaults</b><br />
+                    TX&nbsp;= pin&nbsp;17 &nbsp;|&nbsp; RX&nbsp;= pin&nbsp;16<br />
+                    IR carrier&nbsp;= pin&nbsp;2 (38&nbsp;kHz)<br />
                     Change in <code>RCX.__init__()</code> if your board differs.
                 </div>
             </div>
-
         </div>
     </body>
 </html>
