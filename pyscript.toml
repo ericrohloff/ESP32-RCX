@@ -5,6 +5,7 @@ name = "RoboLab"
 "./pyscript/esp32_driver.py" = "esp32_driver.py"
 "./pyscript/control_panel.py" = "control_panel.py"
 "./pyscript/RS232.py" = "RS232.py"
+"./pyscript/usb_tower_driver.py" = "usb_tower_driver.py"
 
 [js_modules.main]
 "https://cdn.jsdelivr.net/npm/micro-repl@0.8.2/serial.js" = "micro_repl"

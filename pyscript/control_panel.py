@@ -3,6 +3,7 @@ from pyscript import when, document, window
 from pyscript.js_modules.micro_repl import default as Board
 import json
 import main as core
+import usb_tower_driver
 
 
 class SerialBoard:
@@ -316,3 +317,190 @@ async def flash_code(event):
         log_to_ui("✓ Done")
     except Exception as e:
         log_to_ui(f"Error: {e}")
+
+
+# ── USB Tower ───────────────────────────────────────────────────────────────
+
+_tower = usb_tower_driver.rcx
+
+TOWER_TEMPLATES = {
+    "tower_beep": """\
+# USB Tower: Quick beep — confirms IR is reaching the RCX
+await rcx.beep()
+""",
+    "tower_move_forward": """\
+# USB Tower: Drive forward 2 seconds at full speed, then stop
+await rcx.move(speed=7, duration=2.0)
+await rcx.beep()
+""",
+    "tower_drive_pattern": """\
+# USB Tower: Forward -> pivot left -> forward
+await rcx.move(speed=7, duration=2.0)
+await rcx.turn_left(speed=5, duration=0.6)
+await rcx.move(speed=7, duration=2.0)
+await rcx.stop()
+await rcx.beep()
+""",
+    "tower_motor_test": """\
+# USB Tower: Test motors A and B individually
+await rcx.set_power(0, 5)
+await rcx.motor_on(0)
+await rcx.wait(1.5)
+await rcx.motor_off(0)
+
+await rcx.set_power(1, 5)
+await rcx.motor_on(1)
+await rcx.wait(1.5)
+await rcx.motor_off(1)
+
+await rcx.beep()
+""",
+    "tower_spin_turn": """\
+# USB Tower: Spin left then right
+await rcx.spin_left(speed=5, duration=1.0)
+await rcx.spin_right(speed=5, duration=1.0)
+await rcx.stop()
+await rcx.beep()
+""",
+    "tower_square_pattern": """\
+# USB Tower: Drive in a square pattern
+for i in range(4):
+    await rcx.move(speed=5, duration=1.5)
+    await rcx.turn_right(speed=4, duration=0.5)
+
+await rcx.stop()
+await rcx.beep(sound=3)
+""",
+    "tower_acceleration": """\
+# USB Tower: Ramp speed from 2 to 7
+for speed in [2, 3, 4, 5, 6, 7]:
+    await rcx.move(speed=speed, duration=0.8)
+    await rcx.wait(0.3)
+
+await rcx.stop()
+await rcx.beep()
+""",
+}
+
+
+def usb_log(message):
+    log_div = document.querySelector("#usb-log")
+    if not log_div:
+        return
+    entry = document.createElement("div")
+    entry.innerText = f"> {message}"
+    log_div.appendChild(entry)
+    log_div.scrollTop = log_div.scrollHeight
+
+
+def _update_usb_status(connected):
+    status = document.querySelector("#usb-status")
+    btn = document.querySelector("#usb-connect-btn")
+    if status:
+        status.innerText = "Connected" if connected else "Not Connected"
+        status.style.color = "#10b981" if connected else "#e74c3c"
+    if btn:
+        btn.innerText = "Disconnect" if connected else "Connect Tower"
+
+
+@when("click", "#usb-connect-btn")
+async def usb_connect(_event):
+    if _tower.connected:
+        await _tower.disconnect()
+        _update_usb_status(False)
+        usb_log("Tower disconnected")
+        return
+    try:
+        usb_log("Opening USB device picker...")
+        info = await _tower.connect()
+        _update_usb_status(True)
+        usb_log(f"USB Tower connected ({info})")
+    except Exception as e:
+        usb_log(f"Connection error: {e}")
+        _update_usb_status(False)
+
+
+@when("click", "#usb-ping-btn")
+async def usb_ping(event):
+    if not _tower.connected:
+        usb_log("Not connected")
+        return
+    try:
+        await _tower.ping()
+        usb_log("Ping sent")
+    except Exception as e:
+        usb_log(f"Error: {e}")
+
+
+@when("click", "#usb-beep-btn")
+async def usb_beep(event):
+    if not _tower.connected:
+        usb_log("Not connected")
+        return
+    try:
+        await _tower.beep()
+        usb_log("Beep sent")
+    except Exception as e:
+        usb_log(f"Error: {e}")
+
+
+@when("click", "#usb-stop-btn")
+async def usb_stop_all(event):
+    if not _tower.connected:
+        usb_log("Not connected")
+        return
+    try:
+        await _tower.stop()
+        usb_log("Stop sent")
+    except Exception as e:
+        usb_log(f"Error: {e}")
+
+
+@when("click", "#btn-load-tower-template")
+def load_tower_template(event):
+    sel = document.getElementById("tower-template-select")
+    key = sel.value if sel else ""
+    if not key:
+        usb_log("Select a template first.")
+        return
+    code = TOWER_TEMPLATES.get(key)
+    if not code:
+        usb_log(f"Unknown template: {key}")
+        return
+    editor = document.getElementById("mpCode1")
+    if editor:
+        editor.code = code
+        usb_log(f"✓ Template loaded: {key}")
+    else:
+        usb_log("Error: Editor not found")
+
+
+@when("click", "#usb-run-btn")
+async def usb_run(event):
+    if not _tower.connected:
+        usb_log("Connect USB Tower first!")
+        return
+
+    editor = document.getElementById("mpCode1")
+    if not editor:
+        usb_log("Error: Editor not found")
+        return
+
+    code = editor.code
+    if not code or not code.strip():
+        usb_log("Editor is empty — load a template first")
+        return
+
+    # Wrap user code in an async function so top-level `await` works.
+    # `pass` ensures the body is valid even if code is comment-only.
+    indented = "\n".join("    " + line for line in code.split("\n"))
+    wrapper = f"async def _user_main(rcx, asyncio):\n    pass\n{indented}\n"
+
+    try:
+        namespace = {}
+        exec(compile(wrapper, "<user_code>", "exec"), namespace)
+        usb_log("Running...")
+        await namespace["_user_main"](_tower, asyncio)
+        usb_log("✓ Done")
+    except Exception as e:
+        usb_log(f"Error: {e}")

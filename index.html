@@ -43,80 +43,214 @@
             </div>
 
             <div class="control-panel">
-                <h3 style="margin-top: 0">Packet Preview</h3>
-                <p
-                    style="
-                        margin: 0 0 10px 0;
-                        font-size: 0.9rem;
-                        color: #6b7280;
-                    "
-                >
-                    Select a template to see the expected IR packets it will
-                    generate. This helps you understand what commands each
-                    template sends to the RCX.
-                </p>
-                <div class="packet-stream-container">
-                    <h4>Expected Packets</h4>
-                    <button class="btn-clear">Clear</button>
-                    <div
-                        id="packet-stream"
-                        style="
-                            background: #f9fafb;
-                            height: 250px;
-                            overflow-y: auto;
-                            padding: 10px;
-                            border-radius: 4px;
-                            border: 1px solid #e5e7eb;
-                        "
-                    >
-                        <div style="color: #9ca3af; font-size: 0.9rem">
-                            Select a template to preview packets →
+                <!-- Mode toggle -->
+                <div style="display:flex; gap:6px; margin-bottom:14px;">
+                    <button id="mode-esp32-btn" onclick="setMode('esp32')" style="flex:1; padding:7px 0; border-radius:6px; border:2px solid #3b82f6; background:#3b82f6; color:white; font-weight:700; font-size:12px; cursor:pointer;">ESP32</button>
+                    <button id="mode-tower-btn" onclick="setMode('usb_tower')" style="flex:1; padding:7px 0; border-radius:6px; border:2px solid var(--border); background:white; color:#374151; font-weight:700; font-size:12px; cursor:pointer;">USB Tower</button>
+                </div>
+
+                <!-- ESP32 panel -->
+                <div id="panel-esp32">
+                    <h3 style="margin-top: 0">Packet Preview</h3>
+                    <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #6b7280;">
+                        Select a template to see the expected IR packets it will
+                        generate.
+                    </p>
+                    <div class="packet-stream-container">
+                        <h4>Expected Packets</h4>
+                        <button class="btn-clear">Clear</button>
+                        <div
+                            id="packet-stream"
+                            style="background: #f9fafb; height: 200px; overflow-y: auto; padding: 10px; border-radius: 4px; border: 1px solid #e5e7eb;"
+                        >
+                            <div style="color: #9ca3af; font-size: 0.9rem">
+                                Select a template to preview packets →
+                            </div>
                         </div>
+                    </div>
+                    <div style="margin-top: 16px">
+                        <h4 style="margin: 0 0 8px 0; font-size: 0.95rem">Code Templates</h4>
+                        <select id="template-select" style="width:100%; padding:6px; border-radius:5px; border:1px solid var(--border); margin-bottom:6px; background:white;">
+                            <option value="">— choose template —</option>
+                            <option value="beep_test">Beep Test</option>
+                            <option value="move_forward">Move Forward (2 s)</option>
+                            <option value="drive_pattern">Drive Pattern</option>
+                            <option value="motor_test">Motor A / B Test</option>
+                            <option value="spin_turn">Spin Left &amp; Right</option>
+                            <option value="square_pattern">Square Pattern</option>
+                            <option value="acceleration">Speed Test</option>
+                        </select>
+                        <button id="btn-load-template" style="width:100%; padding:7px; background:var(--glass); border:1px solid var(--border); border-radius:5px; cursor:pointer; font-weight:600; font-size:12px;">
+                            Load Template
+                        </button>
                     </div>
                 </div>
 
-                <div style="margin-top: 16px">
-                    <h4 style="margin: 0 0 8px 0; font-size: 0.95rem">
-                        Code Templates
-                    </h4>
-                    <select
-                        id="template-select"
-                        style="
-                            width: 100%;
-                            padding: 6px;
-                            border-radius: 5px;
-                            border: 1px solid var(--border);
-                            margin-bottom: 6px;
-                            background: white;
-                        "
-                    >
-                        <option value="">— choose template —</option>
-                        <option value="beep_test">Beep Test</option>
-                        <option value="move_forward">Move Forward (2 s)</option>
-                        <option value="drive_pattern">Drive Pattern</option>
-                        <option value="motor_test">Motor A / B Test</option>
-                        <option value="spin_turn">Spin Left &amp; Right</option>
-                        <option value="square_pattern">Square Pattern</option>
-                        <option value="acceleration">Speed Test</option>
-                    </select>
-                    <button
-                        id="btn-load-template"
-                        style="
-                            width: 100%;
-                            padding: 7px;
-                            background: var(--glass);
-                            border: 1px solid var(--border);
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            font-size: 12px;
-                        "
-                    >
-                        Load Template
+                <!-- USB Tower panel -->
+                <div id="panel-usb-tower" style="display:none;">
+                    <h3 style="margin-top:0;">USB Tower</h3>
+                    <p style="margin:0 0 10px 0; font-size:0.85rem; color:#6b7280;">
+                        Connect the LEGO USB IR Tower directly. Code runs in the
+                        browser — use <code>await rcx.move()</code> syntax.
+                    </p>
+
+                    <!-- Connection -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <button id="usb-connect-btn" style="padding:7px 14px; background:#3b82f6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">
+                            Connect Tower
+                        </button>
+                        <span id="usb-status" style="font-size:12px; color:#e74c3c; font-weight:600;">Not Connected</span>
+                    </div>
+
+                    <!-- Quick actions -->
+                    <div style="display:flex; gap:6px; margin-bottom:12px;">
+                        <button id="usb-ping-btn" style="flex:1; padding:5px; background:#f3f4f6; border:1px solid var(--border); border-radius:5px; cursor:pointer; font-size:11px; font-weight:600;">Ping</button>
+                        <button id="usb-beep-btn" style="flex:1; padding:5px; background:#f3f4f6; border:1px solid var(--border); border-radius:5px; cursor:pointer; font-size:11px; font-weight:600;">Beep</button>
+                        <button id="usb-stop-btn" style="flex:1; padding:5px; background:#fee2e2; border:1px solid #fca5a5; border-radius:5px; cursor:pointer; font-size:11px; font-weight:600; color:#dc2626;">Stop</button>
+                    </div>
+
+                    <!-- Templates -->
+                    <div style="margin-bottom:10px;">
+                        <h4 style="margin:0 0 6px 0; font-size:0.9rem;">Tower Templates</h4>
+                        <select id="tower-template-select" style="width:100%; padding:6px; border-radius:5px; border:1px solid var(--border); margin-bottom:6px; background:white; font-size:12px;">
+                            <option value="">— choose template —</option>
+                            <option value="tower_beep">Beep Test</option>
+                            <option value="tower_move_forward">Move Forward (2 s)</option>
+                            <option value="tower_drive_pattern">Drive Pattern</option>
+                            <option value="tower_motor_test">Motor A / B Test</option>
+                            <option value="tower_spin_turn">Spin Left &amp; Right</option>
+                            <option value="tower_square_pattern">Square Pattern</option>
+                            <option value="tower_acceleration">Speed Test</option>
+                        </select>
+                        <button id="btn-load-tower-template" style="width:100%; padding:7px; background:var(--glass); border:1px solid var(--border); border-radius:5px; cursor:pointer; font-weight:600; font-size:12px;">
+                            Load Template
+                        </button>
+                    </div>
+
+                    <!-- Run button -->
+                    <button id="usb-run-btn" style="width:100%; padding:9px; background:#10b981; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:13px; margin-bottom:10px;">
+                        Run on Tower
                     </button>
+
+                    <!-- Output log -->
+                    <h4 style="margin:0 0 4px 0; font-size:0.9rem;">Output</h4>
+                    <div id="usb-log" style="background:#0f172a; color:#a3e635; font-family:'Courier New',monospace; font-size:11px; padding:8px; border-radius:6px; height:130px; overflow-y:auto;"></div>
                 </div>
             </div>
         </div>
+    <!-- USB Tower JS driver — all WebUSB calls stay on the main thread -->
+    <script>
+    (function () {
+        class USBTowerJS {
+            constructor() {
+                this.device = null;
+                this._outEndpoint = null;
+                this._altSetting  = null;
+            }
+
+            get connected() { return this.device !== null; }
+
+            // Returns a string describing the discovered endpoints for debugging
+            _describeConfig() {
+                if (!this.device || !this.device.configuration) return 'no config';
+                return this.device.configuration.interfaces.map(iface =>
+                    'iface ' + iface.interfaceNumber + ': ' +
+                    iface.alternates.map(alt =>
+                        'alt' + alt.alternateSetting + '[' +
+                        alt.endpoints.map(ep =>
+                            ep.direction + ep.endpointNumber + '(' + ep.type + ')'
+                        ).join(',') + ']'
+                    ).join(' ')
+                ).join(' | ');
+            }
+
+            async connect() {
+                this.device = await navigator.usb.requestDevice({
+                    filters: [{ vendorId: 0x0694, productId: 0x0001 }]
+                });
+                await this.device.open();
+                await this.device.selectConfiguration(1);
+
+                // Discover which alternate setting has the OUT endpoint
+                const iface = this.device.configuration.interfaces[0];
+                let foundAlt = null, foundEp = null;
+                for (const alt of iface.alternates) {
+                    for (const ep of alt.endpoints) {
+                        if (ep.direction === 'out') {
+                            foundAlt = alt.alternateSetting;
+                            foundEp  = ep.endpointNumber;
+                            break;
+                        }
+                    }
+                    if (foundAlt !== null) break;
+                }
+                if (foundAlt === null) {
+                    throw new Error(
+                        'No OUT endpoint found. Device config: ' + this._describeConfig()
+                    );
+                }
+                this._altSetting  = foundAlt;
+                this._outEndpoint = foundEp;
+                console.log('[USB Tower] alt=' + foundAlt + ' ep=' + foundEp +
+                            '  full config: ' + this._describeConfig());
+
+                await this.device.claimInterface(0);
+                await this.device.selectAlternateInterface(0, this._altSetting);
+
+                // Reset
+                await this.device.controlTransferOut({
+                    requestType: 'vendor', recipient: 'device',
+                    request: 0x02, value: 0, index: 0
+                });
+                await new Promise(r => setTimeout(r, 150));
+
+                // Get version — wakes the tower
+                await this.device.controlTransferIn({
+                    requestType: 'vendor', recipient: 'device',
+                    request: 0xFF, value: 0, index: 0
+                }, 4);
+
+                // Set TX speed: 2400 baud = value 8
+                await this.device.controlTransferOut({
+                    requestType: 'vendor', recipient: 'device',
+                    request: 0x01, value: 8, index: 0
+                });
+
+                // Set RX speed: 2400 baud = value 8
+                await this.device.controlTransferOut({
+                    requestType: 'vendor', recipient: 'device',
+                    request: 0x00, value: 8, index: 0
+                });
+
+                return 'alt=' + foundAlt + ' ep=' + foundEp;
+            }
+
+            async sendPacket(byteArray) {
+                if (!this.device) throw new Error('USB Tower not connected');
+                const buf = new Uint8Array(Array.from(byteArray));
+                const result = await this.device.transferOut(this._outEndpoint, buf);
+                if (result.status !== 'ok') {
+                    throw new Error('transferOut status: ' + result.status);
+                }
+            }
+
+            async disconnect() {
+                if (this.device) {
+                    try {
+                        await this.device.releaseInterface(0);
+                        await this.device.close();
+                    } catch (_) {}
+                    this.device = null;
+                    this._outEndpoint = null;
+                    this._altSetting  = null;
+                }
+            }
+        }
+
+        window.usbTower = new USBTowerJS();
+    })();
+    </script>
+
     <!-- Commands modal -->
     <div id="commands-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5);">
         <div style="position:absolute; inset:0; display:flex; flex-direction:column; margin:24px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
@@ -128,6 +262,34 @@
         </div>
     </div>
     <script>
+        function setMode(mode) {
+            var esp32Panel = document.getElementById('panel-esp32');
+            var towerPanel = document.getElementById('panel-usb-tower');
+            var esp32Btn   = document.getElementById('mode-esp32-btn');
+            var towerBtn   = document.getElementById('mode-tower-btn');
+            if (mode === 'esp32') {
+                esp32Panel.style.display = '';
+                towerPanel.style.display = 'none';
+                esp32Btn.style.background = '#3b82f6';
+                esp32Btn.style.color = 'white';
+                esp32Btn.style.borderColor = '#3b82f6';
+                towerBtn.style.background = 'white';
+                towerBtn.style.color = '#374151';
+                towerBtn.style.borderColor = 'var(--border)';
+            } else {
+                esp32Panel.style.display = 'none';
+                towerPanel.style.display = '';
+                towerBtn.style.background = '#3b82f6';
+                towerBtn.style.color = 'white';
+                towerBtn.style.borderColor = '#3b82f6';
+                esp32Btn.style.background = 'white';
+                esp32Btn.style.color = '#374151';
+                esp32Btn.style.borderColor = 'var(--border)';
+            }
+            window._currentMode = mode;
+        }
+        window._currentMode = 'esp32';
+
         document.getElementById('open-commands-btn').addEventListener('click', function(e) {
             e.preventDefault();
             document.getElementById('commands-modal').style.display = 'block';
